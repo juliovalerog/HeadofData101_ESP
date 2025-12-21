@@ -1,0 +1,10 @@
+Pais;Marca;Modelo;Precio;Kilometros;Automatico/Manual;Fabricacion;Combustible;kW;CV
+E;mercedes-benz;Desconocido;41500;10298;Manual;1935-01-01;Gasolina;29;39
+E;mercedes-benz;220;30000;15000;Manual;1952-01-01;Gasolina;78;106
+E;mercedes-benz;190;155000;9000;0 Transmision;1958-12-01;Gasolina;81;110
+E;mercedes-benz;220;24900;89000;0 Transmision;1962-09-01;Gasolina;120;163
+E;mercedes-benz;220;44900;71800;0 Transmision;1963-09-01;Gasolina;120;163
+E;mercedes-benz;e 320;2500;166000;0 Transmision;1966-06-01;Gasolina;166;226
+E;mercedes-benz;250;10000;106000;Automatico;1967-04-01;Gasolina;130;177
+E;mercedes-benz;200;16000;130000;0 Transmision;1967-02-01;Gasolina;13;18
+E;mercedes-benz;ce 280;14900;150000;Automatico;1969-05-01;Gasolina;140;190
