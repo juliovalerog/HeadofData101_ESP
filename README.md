@@ -1,4 +1,4 @@
-﻿# HeadOfData101
+﻿﻿# HeadOfData101
 
 Repository for the Head of Data 101 course (Albert School). End-to-end project focused on web scraping, data cleaning, and preparing an analytical dataset from AutoScout24 car listings.
 
@@ -64,3 +64,24 @@ Expected raw columns (from the preprocessing notebook):
 - Consolidate scraping and preprocessing into reusable scripts in `src/`.
 - Add exploratory analysis and visuals in `reports/`.
 - Define a reproducible pipeline (make/pyproject) and basic tests.
+
+## BigQuery Analytical Database
+
+Project: albertheadofdata101  
+Dataset: autoscout  
+
+This project uses Google BigQuery as an analytical data warehouse following a star schema design.
+
+### Build order
+
+1. Upload the cleaned CSV as `stg_listings_clean`
+2. Execute `sql/01_create_tables.sql`
+3. Execute `sql/02_build_dimensions.sql`
+4. Execute `sql/03_build_fact.sql`
+
+### Design principles
+
+- Star schema with one fact table and three dimensions
+- Primary and foreign keys are enforced by design, not by engine constraints
+- Tables are rebuilt using `CREATE OR REPLACE`
+- SQL logic is versioned in GitHub for reproducibility and auditability
