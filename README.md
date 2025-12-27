@@ -1,6 +1,6 @@
-# HeadOfData101
+﻿# HeadOfData101
 
-Repository for the Head of Data 101 course (Albert School). End-to-end project focused on web scraping, data cleaning, building a BigQuery star schema, and running regression analysis on AutoScout24 car listings.
+Repository for the Head of Data 101 course (Albert School). End-to-end project focused on web scraping, data cleaning, building a BigQuery star schema, and running regression and classification analysis on AutoScout24 car listings.
 
 ## Project flow
 
@@ -8,6 +8,7 @@ Repository for the Head of Data 101 course (Albert School). End-to-end project f
 2. Preprocessing: clean and normalize the raw data.
 3. BigQuery tables: create the schema and load data.
 4. Regression: fit models, label bargains, and publish results.
+5. Classification: compare classifiers and report model performance.
 
 ## Repository structure
 
@@ -18,11 +19,13 @@ Repository for the Head of Data 101 course (Albert School). End-to-end project f
 |  |- processed/          # Cleaned and structured CSVs
 |  `- samplefiles/        # Sample files for class exercises
 |- notebooks/
-|  |- scrapping/          # Scraping (AutoScout24)
-|  |- preprocessing/      # Cleaning and normalization
-|  |- sql/                # BigQuery querying and analysis
-|  `- regression/         # Regression and bargain labeling
-|- docs/                  # Saved figures from notebooks
+|  |- 01_scrapping/       # Scraping (AutoScout24)
+|  |- 02_preprocessing/   # Cleaning and normalization
+|  |- 03_sql/             # BigQuery querying and analysis
+|  |- 04_regression/      # Regression and bargain labeling
+|  `- 05_classification/  # Classification and model comparison
+|- docs/                  # Figures from regression notebooks
+|- reports/               # Classification outputs (metrics, charts)
 |- sql/                   # BigQuery DDL/DML scripts for the star schema
 |- src/                   # Reusable code (currently empty)
 `- README.md
@@ -48,17 +51,19 @@ Repository for the Head of Data 101 course (Albert School). End-to-end project f
 
 3. Open the notebooks (in order):
 
-- `notebooks/scrapping/scrapping.ipynb`
-- `notebooks/preprocessing/preprocessing.ipynb`
-- `notebooks/sql/sqlqueries.ipynb`
-- `notebooks/regression/regression.ipynb`
+- `notebooks/01_scrapping/scrapping.ipynb`
+- `notebooks/02_preprocessing/preprocessing.ipynb`
+- `notebooks/03_sql/sqlqueries.ipynb`
+- `notebooks/04_regression/regression.ipynb`
+- `notebooks/05_classification/classification_audi_a3_germany.ipynb`
 
 ## Data
 
 - **Raw**: generated under `data/raw/` with timestamps. Never modified.
 - **Processed**: saved under `data/processed/` with timestamps.
 - **Sample**: examples in `data/samplefiles/`.
-- **Figures**: saved under `docs/` from the regression notebook.
+- **Figures**: saved under `docs/` from the regression notebooks.
+- **Reports**: saved under `reports/` from the classification notebook.
 
 Expected raw columns (from the preprocessing notebook):
 `make`, `model`, `mileage`, `price`, `registration`, `fuel`, `country`, `brand`, `page`.

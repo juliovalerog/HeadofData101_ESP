@@ -1,8 +1,12 @@
-# Ignore the Audi A3 Germany scrape notebooks and outputs
-notebooks/scrapping/scrapping_audi_a3_germany.ipynb
-notebooks/preprocessing/preprocessing_audi_a3_germany.ipynb
+﻿# Ignore the Audi A3 Germany scrape notebooks and outputs
+notebooks/01_scrapping/scrapping_audi_a3_germany.ipynb
+notebooks/02_preprocessing/preprocessing_audi_a3_germany.ipynb
 data/raw/autoscout24_listings_audi_a3_germany_*.csv
 # Ignore the Audi A3 Germany regression notebook and outputs
-notebooks/regression/regression_audi_a3_germany.ipynb
+notebooks/04_regression/regression_audi_a3_germany.ipynb
 data/processed/*audi_a3_germany*.csv
 docs/*audi_a3_germany*.png
+# Ignore the Audi A3 Germany classification notebook and outputs
+notebooks/05_classification/classification_audi_a3_germany.ipynb
+reports/*audi_a3_germany*.png
+reports/*audi_a3_germany*.csv
