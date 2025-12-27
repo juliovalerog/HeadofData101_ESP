@@ -1,0 +1,3 @@
+# Ignore the Audi A3 Germany scrape notebook and outputs
+notebooks/scrapping/scrapping_model_deepdive.ipynb
+data/raw/autoscout24_listings_audi_a3_germany_*.csv
