@@ -20,11 +20,18 @@ Repository for the Head of Data 101 course (Albert School). This trimmed repo ke
 |  `- samplefiles/
 |     `- sampledata/      # Sample CSVs for class exercises
 |- notebooks/
-|  |- 01 scrapping_audi_a3_germany.ipynb
-|  |- 02 preprocessing_audi_a3_germany.ipynb
-|  |- 03 sqlqueries_audi_a3_germany.ipynb
-|  |- 04 regression_audi_a3_germany.ipynb
-|  `- 05 classification_audi_a3_germany.ipynb
+|  |- full_notebooks/     # Full versions (deeper explanations and extras)
+|  |  |- 01 scrapping_audi_a3_germany.ipynb
+|  |  |- 02 preprocessing_audi_a3_germany.ipynb
+|  |  |- 03 sqlqueries_audi_a3_germany.ipynb
+|  |  |- 04 regression_audi_a3_germany.ipynb
+|  |  `- 05 classification_audi_a3_germany.ipynb
+|  `- class_notebooks/    # Class versions (beginner-friendly, simplified)
+|     |- 01 scrapping_audi_a3_germany_class.ipynb
+|     |- 02 preprocessing_audi_a3_germany_class.ipynb
+|     |- 03 sqlqueries_audi_a3_germany_class.ipynb
+|     |- 04 regression_audi_a3_germany_class.ipynb
+|     `- 05 classification_audi_a3_germany_class.ipynb
 |- docs/
 |  `- star_schema.png     # Star schema diagram
 |- sql/                   # BigQuery DDL/DML scripts
@@ -55,11 +62,21 @@ Repository for the Head of Data 101 course (Albert School). This trimmed repo ke
 
 3. Open the notebooks (in order):
 
-- `notebooks/01 scrapping_audi_a3_germany.ipynb`
-- `notebooks/02 preprocessing_audi_a3_germany.ipynb`
-- `notebooks/03 sqlqueries_audi_a3_germany.ipynb`
-- `notebooks/04 regression_audi_a3_germany.ipynb`
-- `notebooks/05 classification_audi_a3_germany.ipynb`
+Class notebooks for in-class use (recommended):
+
+- `notebooks/class_notebooks/01 scrapping_audi_a3_germany_class.ipynb`
+- `notebooks/class_notebooks/02 preprocessing_audi_a3_germany_class.ipynb`
+- `notebooks/class_notebooks/03 sqlqueries_audi_a3_germany_class.ipynb`
+- `notebooks/class_notebooks/04 regression_audi_a3_germany_class.ipynb`
+- `notebooks/class_notebooks/05 classification_audi_a3_germany_class.ipynb`
+
+Full notebooks for deeper self-study:
+
+- `notebooks/full_notebooks/01 scrapping_audi_a3_germany.ipynb`
+- `notebooks/full_notebooks/02 preprocessing_audi_a3_germany.ipynb`
+- `notebooks/full_notebooks/03 sqlqueries_audi_a3_germany.ipynb`
+- `notebooks/full_notebooks/04 regression_audi_a3_germany.ipynb`
+- `notebooks/full_notebooks/05 classification_audi_a3_germany.ipynb`
 
 ## Data
 
