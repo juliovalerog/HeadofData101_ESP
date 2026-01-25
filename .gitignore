@@ -1,1 +1,11 @@
-﻿
+﻿.venv/
+.tmp_nb_py/
+.tmp_requirements_*.txt
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+data/raw/
+data/processed/
+
+
+
