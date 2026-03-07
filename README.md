@@ -1,117 +1,73 @@
-﻿# HeadOfData101 (Audi A3 Germany)
+﻿# Head Of Data 101 Baseline Repo
 
-Repository for the Head of Data 101 course (Albert School). This trimmed repo keeps only the Audi A3 Germany pipeline: scrape AutoScout24, clean data, build a BigQuery star schema, and run regression/classification models.
+This repository is the **day-0 baseline** for a professional end-to-end data product workflow.
+It is intentionally incomplete and designed for students to extend.
 
-## Project flow
+The course roleplay is a data unit inside a retail / consumer bank evaluating used-vehicle acquisition opportunities for resale and financing portfolios.
 
-1. Scraping: collect raw Audi A3 Germany listings from AutoScout24.
-2. Preprocessing: clean and normalize the raw data.
-3. BigQuery tables: create the schema and load data.
-4. Regression: fit models, label bargains, and publish results.
-5. Classification: compare classifiers and report model performance.
+## What This Repo Covers
 
-## Repository structure
+The baseline supports the full delivery chain:
 
-```
-.
-|- data/
-|  |- raw/                # Raw scraping output (timestamped CSV)
-|  |- processed/          # Cleaned listings (timestamped CSV)
-|  `- samplefiles/
-|     `- sampledata/      # Sample CSVs for class exercises
-|- notebooks/
-|  |- full_notebooks/     # Full versions (deeper explanations and extras)
-|  |  |- 01 scrapping_audi_a3_germany.ipynb
-|  |  |- 02 preprocessing_audi_a3_germany.ipynb
-|  |  |- 03 sqlqueries_audi_a3_germany.ipynb
-|  |  |- 04 regression_audi_a3_germany.ipynb
-|  |  `- 05 classification_audi_a3_germany.ipynb
-|  `- class_notebooks/    # Class versions (beginner-friendly, simplified)
-|     |- 01 scrapping_audi_a3_germany_class.ipynb
-|     |- 02 preprocessing_audi_a3_germany_class.ipynb
-|     |- 03 sqlqueries_audi_a3_germany_class.ipynb
-|     |- 04 regression_audi_a3_germany_class.ipynb
-|     `- 05 classification_audi_a3_germany_class.ipynb
-|- docs/
-|  `- star_schema.png     # Star schema diagram
-|- sql/                   # BigQuery DDL/DML scripts
-|  |- 00_create_all_tables.sql
-|  |- 01_create_tables.sql
-|  |- 02_build_dimensions.sql
-|  `- 03_build_fact.sql
-`- README.md
-```
+1. Data acquisition (web scraping)
+2. Data preprocessing and quality checks
+3. Analytical warehouse modeling in BigQuery
+4. SQL dataset definitions for ML and BI consumption
+5. Regression to estimate expected price
+6. Classification to estimate top-price probability
+7. BI-ready outputs for decision support
 
-## Requirements
+## What Students Must Improve
 
-- Python 3.x
-- Jupyter (or VS Code with notebook support)
-- Core libraries: `requests`, `beautifulsoup4`, `pandas`, `numpy`, `matplotlib`
-- Modeling libraries: `scikit-learn`, `statsmodels`
-- BigQuery libraries: `google-cloud-bigquery`, `db-dtypes`
+Students are expected to evolve this baseline into a stronger product by improving:
 
-## How to run
+- model performance and validation rigor
+- BI layer and dashboard storytelling
+- business insights and recommendation logic
+- technical and decision documentation
 
-1. Create and activate a virtual environment.
-2. Install dependencies:
+This repository is **not** the finished product.
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install requests beautifulsoup4 pandas numpy matplotlib scikit-learn statsmodels
-.\.venv\Scripts\python.exe -m pip install "google-cloud-bigquery[pandas]" db-dtypes pyarrow
-```
+## Repository Contract
 
-3. Open the notebooks (in order):
+- Keep the repo simple and readable for teaching.
+- Keep notebooks as the main learning surface.
+- Use one single final notebook set (no class/full split in this repo).
+- Preserve the narrative:
+  - regression predicts `expected_price`
+  - classification predicts `top_price`
+  - BI combines actual price, expected-price gap, and top-price outputs
 
-Class notebooks for in-class use (recommended):
+## Recommended Run Path
 
-- `notebooks/class_notebooks/01 scrapping_audi_a3_germany_class.ipynb`
-- `notebooks/class_notebooks/02 preprocessing_audi_a3_germany_class.ipynb`
-- `notebooks/class_notebooks/03 sqlqueries_audi_a3_germany_class.ipynb`
-- `notebooks/class_notebooks/04 regression_audi_a3_germany_class.ipynb`
-- `notebooks/class_notebooks/05 classification_audi_a3_germany_class.ipynb`
+Use [docs/RUN_ORDER.md](docs/RUN_ORDER.md) as the operational sequence.
 
-Full notebooks for deeper self-study:
+Current final notebook target path:
 
-- `notebooks/full_notebooks/01 scrapping_audi_a3_germany.ipynb`
-- `notebooks/full_notebooks/02 preprocessing_audi_a3_germany.ipynb`
-- `notebooks/full_notebooks/03 sqlqueries_audi_a3_germany.ipynb`
-- `notebooks/full_notebooks/04 regression_audi_a3_germany.ipynb`
-- `notebooks/full_notebooks/05 classification_audi_a3_germany.ipynb`
+- `notebooks/01_scraping_audi_a3_germany.ipynb`
+- `notebooks/02_preprocessing_audi_a3_germany.ipynb`
+- `notebooks/03_sqlqueries_audi_a3_germany.ipynb`
+- `notebooks/04_regression_audi_a3_germany.ipynb`
+- `notebooks/05_classification_audi_a3_germany.ipynb`
 
-## Data
+## SQL Assets
 
-- **Raw**: `data/raw/autoscout24_listings_audi_a3_germany_*.csv`
-- **Processed**: `data/processed/autoscout24_listings_processed_audi_a3_germany_*.csv`
-- **Sample**: `data/samplefiles/sampledata/*.csv`
+SQL is organized in ordered files under `sql/`:
 
-Expected raw columns (from the preprocessing notebook):
-`make`, `model`, `mileage`, `price`, `registration`, `fuel`, `country`, `brand`, `page`.
+- `00_create_dataset.sql`
+- `01_create_staging.sql`
+- `02_build_dimensions.sql`
+- `03_build_fact.sql`
+- `04_vw_regression_dataset.sql`
+- `05_vw_classification_dataset.sql`
+- `06_vw_bi_dashboard.sql`
 
-## Scraping good practices
+## Environment
 
-- Limit pages and brands during tests.
-- Respect delays between requests.
-- Review the website terms of use and local legal requirements.
+Install minimum requirements from:
 
-## BigQuery analytical database
+- `requirements_min.in`
 
-Project: albertheadofdata101
-Dataset: autoscout
+Project-level defaults live in:
 
-This project uses Google BigQuery as an analytical data warehouse following a star schema design.
-Tables include dimensions (`dim_model`, `dim_fuel`, `dim_country`), fact listings (`fact_listings`), and model output (`fact_bargains`).
-
-### Build order
-
-1. Upload the cleaned CSV as `stg_listings_clean`
-2. Execute `sql/00_create_all_tables.sql` (consolidated DDL for all tables)
-3. Execute `sql/02_build_dimensions.sql`
-4. Execute `sql/03_build_fact.sql`
-5. Run the regression notebook to create `fact_bargains`
-
-### Design principles
-
-- Star schema with one fact table and three dimensions
-- Primary and foreign keys are enforced by design, not by engine constraints
-- Tables are rebuilt using `CREATE OR REPLACE`
-- SQL logic is versioned in GitHub for reproducibility and auditability
+- `config/project_config.yaml`

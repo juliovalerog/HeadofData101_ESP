@@ -1,0 +1,8 @@
+﻿make: "Audi"
+model: "A3"
+country: "Germany"
+raw_data_path: "data/raw"
+processed_data_path: "data/processed"
+gcp_project_id: "albertheadofdata101"
+bq_dataset: "autoscout_audi_a3_germany"
+random_state: 42

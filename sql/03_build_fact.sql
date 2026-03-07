@@ -1,3 +1,5 @@
+﻿-- Build listing fact table.
+
 CREATE OR REPLACE TABLE `albertheadofdata101.autoscout_audi_a3_germany.fact_listings` AS
 WITH stg AS (
   SELECT
