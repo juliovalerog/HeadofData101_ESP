@@ -1,15 +1,17 @@
-﻿-- Regression dataset view.
+-- Regression dataset view.
 -- Target variable for regression is actual price (`actual_price_eur`).
 
 CREATE OR REPLACE VIEW `albertheadofdata101.autoscout_audi_a3_germany.vw_regression_dataset` AS
 SELECT
   fl.listing_id,
+  dm.brand,
   dm.make,
   dm.model,
   df.fuel_type,
   dc.listing_country,
   fl.mileage_km,
   fl.power_hp,
+  fl.registration_date,
   fl.registration_year,
   fl.registration_month,
   fl.age_years,

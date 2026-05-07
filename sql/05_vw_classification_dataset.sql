@@ -1,9 +1,10 @@
-﻿-- Classification dataset view.
+-- Classification dataset view.
 -- Target variable is `top_price` derived from external price label semantics.
 
 CREATE OR REPLACE VIEW `albertheadofdata101.autoscout_audi_a3_germany.vw_classification_dataset` AS
 SELECT
   fl.listing_id,
+  dm.brand,
   dm.make,
   dm.model,
   df.fuel_type,
@@ -11,6 +12,7 @@ SELECT
   fl.price_eur AS actual_price_eur,
   fl.mileage_km,
   fl.power_hp,
+  fl.registration_date,
   fl.registration_year,
   fl.registration_month,
   fl.age_years,

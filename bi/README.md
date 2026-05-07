@@ -22,7 +22,7 @@ Expected upstream dependencies:
 
 Expose business-friendly fields grouped as:
 
-- listing profile: model, fuel, country, age, mileage, power
+- listing profile: brand, make, model, fuel, country, age, mileage, power
 - observed economics: actual listing price
 - expected economics: expected price, expected-price gap
 - model signals: top-price probability, predicted top-price class

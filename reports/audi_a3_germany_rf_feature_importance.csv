@@ -1,6 +1,11 @@
 feature,importance
-num__price_eur,0.3821643672411107
-num__mileage_km,0.3563329835980122
-num__age_years,0.1522751383254034
-num__power_hp,0.07293901532835219
-num__fuel_id,0.036288495507121654
+num__actual_price_eur,0.39331906530913896
+num__mileage_km,0.3685501379240692
+num__age_years,0.1468815198658492
+num__power_hp,0.0668598041507939
+cat__fuel_type_petrol,0.01023368881098057
+cat__fuel_type_diesel,0.008826333511262614
+cat__fuel_type_2,0.004747612383551667
+cat__fuel_type_c,0.0004193529472136884
+cat__fuel_type_o,0.0001624850971401632
+cat__listing_country_germany,0.0

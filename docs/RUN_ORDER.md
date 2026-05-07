@@ -28,15 +28,16 @@ Dependency notes:
 
 ## 2. SQL Execution Order
 
-Execute SQL files in numeric order:
+Create staging first, load the processed CSV from `data/processed` into `stg_listings_clean`, then build the downstream objects.
 
 1. `sql/00_create_dataset.sql`
 2. `sql/01_create_staging.sql`
-3. `sql/02_build_dimensions.sql`
-4. `sql/03_build_fact.sql`
-5. `sql/04_vw_regression_dataset.sql`
-6. `sql/05_vw_classification_dataset.sql`
-7. `sql/06_vw_bi_dashboard.sql`
+3. Load the processed CSV into `stg_listings_clean`
+4. `sql/02_build_dimensions.sql`
+5. `sql/03_build_fact.sql`
+6. `sql/04_vw_regression_dataset.sql`
+7. `sql/05_vw_classification_dataset.sql`
+8. `sql/06_vw_bi_dashboard.sql`
 
 ## 3. Narrative Contract To Preserve
 

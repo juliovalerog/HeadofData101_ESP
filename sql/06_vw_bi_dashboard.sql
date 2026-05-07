@@ -1,5 +1,18 @@
-﻿-- BI-ready decision support view.
+-- BI-ready decision support view.
 -- Combines actual price, expected-price predictions, and top-price probabilities.
+
+CREATE TABLE IF NOT EXISTS `albertheadofdata101.autoscout_audi_a3_germany.fact_expected_price_predictions` (
+  listing_id INT64,
+  expected_price_eur FLOAT64
+);
+
+CREATE TABLE IF NOT EXISTS `albertheadofdata101.autoscout_audi_a3_germany.fact_top_price_predictions` (
+  listing_id INT64,
+  model_name STRING,
+  predicted_proba FLOAT64,
+  predicted_label BOOL,
+  threshold_used FLOAT64
+);
 
 CREATE OR REPLACE VIEW `albertheadofdata101.autoscout_audi_a3_germany.vw_bi_dashboard` AS
 WITH top_price_selected AS (
@@ -25,12 +38,24 @@ WITH top_price_selected AS (
 )
 SELECT
   fl.listing_id,
+  dm.brand,
   dm.make,
   dm.model,
   df.fuel_type,
   dc.listing_country,
   dpl.price_label,
   fl.price_eur AS actual_price_eur,
+  fl.mileage_km,
+  fl.power_hp,
+  fl.registration_date,
+  fl.registration_year,
+  fl.registration_month,
+  fl.age_years,
+  fl.page,
+  fl.price_outlier_iqr,
+  fl.mileage_outlier_iqr,
+  fl.power_outlier_iqr,
+  fl.logical_issue,
   epp.expected_price_eur,
   SAFE_SUBTRACT(fl.price_eur, epp.expected_price_eur) AS expected_price_gap_eur,
   tps.predicted_proba AS top_price_probability,
