@@ -26,6 +26,10 @@ Dependency notes:
 - Notebook 04 consumes `vw_regression_dataset` and writes `fact_expected_price_predictions`.
 - Notebook 05 consumes `vw_classification_dataset` and writes `fact_top_price_predictions`.
 
+Teaching lab note:
+
+- Notebook `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb` is a Session 06 classroom lab outside the mandatory production run path. It runs from processed CSV files and does not change the production notebook sequence above.
+
 ## 2. SQL Execution Order
 
 Create staging first, load the processed CSV from `data/processed` into `stg_listings_clean`, then build the downstream objects.
