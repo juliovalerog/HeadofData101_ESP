@@ -7,6 +7,7 @@ nbformat
 plotly
 requests
 scikit-learn
+statsmodels
 google-cloud-bigquery
 pyarrow
 db-dtypes
