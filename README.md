@@ -64,7 +64,7 @@ For Session 06, the repo also includes a classroom regression lab:
 
 - `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`
 
-This lab runs from processed CSV files and does **not** require BigQuery access. It prefers the full Session 06 file `data/processed/autoscout24_listings_processed_audi_a3_germany_20251228_205210.csv`, then falls back to the repo-visible copy in `data/sample/processed/autoscout24_listings_processed_audi_a3_germany_20251228_205210.csv`.
+This classroom exercise runs from processed CSV files and does **not** require BigQuery access. The lab first looks for a preferred full Session 06 sample CSV in `data/processed/`, then falls back to the repo-visible sample in `data/sample/processed/`, and finally searches for any processed CSV with the required regression columns.
 
 This lab does **not** replace the production baseline notebook `notebooks/04_regression_audi_a3_germany.ipynb`.
 

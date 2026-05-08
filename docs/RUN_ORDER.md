@@ -9,6 +9,8 @@ This is the recommended execution sequence for the baseline repository.
 3. Validate Google Cloud credentials and BigQuery access.
 4. Review defaults in `config/project_config.yaml`.
 
+BigQuery access is required for the production pipeline, but it is not required for the Session 06 regression challenge lab notebook `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`, which runs from processed CSV files.
+
 ## 1. Notebook Sequence (Single Final Track)
 
 Run notebooks in this order:
