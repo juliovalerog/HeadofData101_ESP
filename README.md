@@ -64,7 +64,11 @@ For Session 06, the repo also includes a classroom regression lab:
 
 - `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`
 
-This classroom exercise runs from processed CSV files and does **not** require BigQuery access. The lab first looks for a preferred full Session 06 sample CSV in `data/processed/`, then falls back to the repo-visible sample in `data/sample/processed/`, and finally searches for any processed CSV with the required regression columns.
+This classroom lab is designed as a 3-hour live session. It intentionally prioritizes interpretation, model reasoning, and business hand-off over full implementation from scratch.
+
+It runs from processed CSV files and does **not** require BigQuery access. The lab first looks for a preferred full Session 06 sample CSV in `data/processed/`, then falls back to the repo-visible sample in `data/sample/processed/`, and finally searches for any processed CSV with the required regression columns.
+
+Advanced regression models are included only as an optional extension, not as required core class work.
 
 This lab does **not** replace the production baseline notebook `notebooks/04_regression_audi_a3_germany.ipynb`.
 
@@ -74,7 +78,11 @@ For Session 07, the repo also includes a classroom classification lab:
 
 - `notebooks/05b_classification_challenge_lab_audi_a3_germany.ipynb`
 
-This classroom exercise runs from processed CSV files and does not require BigQuery access. It does not replace the production baseline notebook `notebooks/05_classification_audi_a3_germany.ipynb`.
+This classroom lab is designed as a 3-hour live session. It intentionally prioritizes interpretation, model reasoning, threshold policy, and business hand-off over full implementation from scratch.
+
+It runs from processed CSV files and does not require BigQuery access. Advanced models and probability calibration are optional extensions, not required core class work.
+
+It does not replace the production baseline notebook `notebooks/05_classification_audi_a3_germany.ipynb`.
 
 ## SQL Assets
 
