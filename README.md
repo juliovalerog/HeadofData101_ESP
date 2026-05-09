@@ -68,6 +68,14 @@ This classroom exercise runs from processed CSV files and does **not** require B
 
 This lab does **not** replace the production baseline notebook `notebooks/04_regression_audi_a3_germany.ipynb`.
 
+## Session 07 Classification Challenge Lab
+
+For Session 07, the repo also includes a classroom classification lab:
+
+- `notebooks/05b_classification_challenge_lab_audi_a3_germany.ipynb`
+
+This classroom exercise runs from processed CSV files and does not require BigQuery access. It does not replace the production baseline notebook `notebooks/05_classification_audi_a3_germany.ipynb`.
+
 ## SQL Assets
 
 SQL is organized in ordered files under `sql/`:
