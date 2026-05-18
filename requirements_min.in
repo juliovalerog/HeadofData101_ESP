@@ -9,5 +9,7 @@ requests
 scikit-learn
 statsmodels
 google-cloud-bigquery
+google-genai
 pyarrow
 db-dtypes
+streamlit
