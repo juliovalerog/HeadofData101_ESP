@@ -105,3 +105,21 @@ Install minimum requirements from:
 Project-level defaults live in:
 
 - `config/project_config.yaml`
+
+## Optional Gemini Configuration
+
+Gemini features are optional. The Streamlit dashboard uses Gemini for committee memo generation and the GenAI SQL assistant only when the `google-genai` package is installed and an API key is available.
+
+Configure the key locally in PowerShell with one of:
+
+```powershell
+$env:GEMINI_API_KEY="your_api_key_here"
+```
+
+or:
+
+```powershell
+$env:GOOGLE_API_KEY="your_api_key_here"
+```
+
+`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If neither environment variable is set, the app falls back to deterministic/default behavior. Gemini credentials are not read from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or committed credential files.

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -8,9 +10,14 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from google.api_core.exceptions import GoogleAPIError
+from google.api_core.exceptions import BadRequest, Forbidden, GoogleAPIError
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import bigquery
+
+try:
+    from gemini_helper import generate_gemini_content, gemini_available, gemini_unavailable_message
+except ImportError:
+    from bi.gemini_helper import generate_gemini_content, gemini_available, gemini_unavailable_message
 
 
 REQUIRED_COLUMNS = [
@@ -73,6 +80,58 @@ PERCENT_SLIDER_KEYS = {
     "fuel_card_apr_discount",
     "payroll_attach_rate",
     "payroll_apr_discount",
+}
+
+def env_megabytes(name: str, default: int) -> int:
+    try:
+        value = os.getenv(name)
+        if value:
+            return int(float(value))
+    except ValueError:
+        pass
+    return default
+
+
+MAX_BYTES_BILLED = env_megabytes("BQ_MAX_BYTES_BILLED_MB", 50) * 1024 * 1024
+ALLOWED_BI_VIEW_TEMPLATE = "`{project_id}.{dataset_id}.vw_bi_dashboard`"
+
+AI_EXAMPLE_PROMPTS = [
+    "Which listings should the committee review first?",
+    "Which fuel types concentrate the strongest price opportunities?",
+    "Where do expected-price gap and top-price probability agree?",
+    "Which opportunities are risky because of quality flags?",
+    "Summarize the decision_flag distribution.",
+    "Compare actual vs expected price by registration year.",
+    "Show cases where the model outputs are missing.",
+]
+
+DEMO_QUESTIONS = [
+    "Which listings should the committee review first?",
+    "Which fuel types concentrate the strongest price opportunities?",
+    "Where do regression and classification signals agree?",
+    "Which opportunities have quality or logical risk flags?",
+    "How many listings fall into each decision flag?",
+]
+
+DECISION_FLAG_MEANINGS = {
+    "high_priority_review": "below expected price and strong top-price signal",
+    "price_opportunity": "below expected price but the top-price signal is weaker or missing",
+    "top_price_signal": "positive classification signal, price gap not necessarily attractive",
+    "review_missing_model_outputs": "model outputs are missing and need review",
+    "standard_review": "no strong priority signal",
+}
+
+BI_FIELD_MEANINGS = {
+    "actual_price_eur": "observed marketplace listing price",
+    "expected_price_eur": "regression model estimate of normal market price",
+    "expected_price_gap_eur": "actual price minus expected price; negative means below model-expected value",
+    "top_price_probability": "classification model probability associated with the external top-price signal",
+    "predicted_top_price": "binary model output for the top-price classification task",
+    "decision_flag": "business priority flag produced in the BI view",
+    "price_outlier_iqr": "IQR-based price quality and risk flag",
+    "mileage_outlier_iqr": "IQR-based mileage quality and risk flag",
+    "power_outlier_iqr": "IQR-based power quality and risk flag",
+    "logical_issue": "logical data quality or business rule issue flag",
 }
 
 
@@ -1337,16 +1396,6 @@ def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
-def gemini_api_key() -> str | None:
-    try:
-        value = st.secrets.get("GEMINI_API_KEY")
-        if value:
-            return str(value)
-    except Exception:
-        pass
-    return os.environ.get("GEMINI_API_KEY")
-
-
 def build_memo_prompt(
     vehicle_preset: str,
     pricing_preset: str,
@@ -1398,21 +1447,709 @@ Keep the memo concise, executive, and non-technical.
 
 
 def call_gemini(prompt: str) -> str:
-    api_key = gemini_api_key()
-    if not api_key:
-        return (
-            "Gemini API key not configured. Add it to Streamlit secrets or the GEMINI_API_KEY environment variable."
-        )
+    text, error = generate_gemini_content(prompt)
+    if error:
+        return f"{error} Deterministic/default dashboard behavior is still available."
+    return text or "Gemini returned an empty response. Deterministic/default dashboard behavior is still available."
+
+
+def allowed_bi_view(project_id: str, dataset_id: str) -> str:
+    return ALLOWED_BI_VIEW_TEMPLATE.format(project_id=project_id, dataset_id=dataset_id)
+
+
+def build_demo_queries(project_id: str, dataset_id: str) -> dict[str, dict[str, Any]]:
+    view = allowed_bi_view(project_id, dataset_id)
+    return {
+        "Which listings should the committee review first?": {
+            "sql": f"""
+SELECT
+  listing_id,
+  make,
+  model,
+  fuel_type,
+  actual_price_eur,
+  expected_price_eur,
+  expected_price_gap_eur,
+  top_price_probability,
+  decision_flag,
+  price_outlier_iqr,
+  mileage_outlier_iqr,
+  power_outlier_iqr,
+  logical_issue
+FROM {view}
+WHERE decision_flag = 'high_priority_review'
+  AND expected_price_gap_eur < 0
+ORDER BY top_price_probability DESC, expected_price_gap_eur ASC
+LIMIT 25
+""",
+            "business_intent": "Rank the first listings the investment committee should review.",
+            "expected_output": "Listing-level priority queue with model signals and quality flags.",
+            "chart_type": "table",
+            "confidence": "high",
+            "limitations": ["Demo SQL uses the governed BI view and does not include local portfolio simulation economics."],
+        },
+        "Which fuel types concentrate the strongest price opportunities?": {
+            "sql": f"""
+SELECT
+  fuel_type,
+  COUNT(*) AS listing_count,
+  AVG(expected_price_gap_eur) AS avg_expected_price_gap_eur,
+  AVG(top_price_probability) AS avg_top_price_probability,
+  COUNTIF(decision_flag = 'high_priority_review') AS high_priority_count
+FROM {view}
+WHERE expected_price_gap_eur < 0
+GROUP BY fuel_type
+ORDER BY high_priority_count DESC, avg_expected_price_gap_eur ASC
+LIMIT 20
+""",
+            "business_intent": "Identify fuel categories where below-expected-price opportunities concentrate.",
+            "expected_output": "Fuel-type aggregation by opportunity count, gap and top-price signal.",
+            "chart_type": "bar",
+            "confidence": "high",
+            "limitations": ["Averages can hide listing-level quality issues."],
+        },
+        "Where do regression and classification signals agree?": {
+            "sql": f"""
+SELECT
+  decision_flag,
+  COUNT(*) AS listing_count,
+  AVG(expected_price_gap_eur) AS avg_expected_price_gap_eur,
+  AVG(top_price_probability) AS avg_top_price_probability
+FROM {view}
+WHERE expected_price_gap_eur IS NOT NULL
+  AND top_price_probability IS NOT NULL
+GROUP BY decision_flag
+ORDER BY avg_top_price_probability DESC, avg_expected_price_gap_eur ASC
+LIMIT 20
+""",
+            "business_intent": "Compare regression price-gap signals with classification top-price probability.",
+            "expected_output": "Decision-flag groups showing both model signals side by side.",
+            "chart_type": "scatter",
+            "confidence": "high",
+            "limitations": ["Agreement is interpreted from aggregate averages, not a statistical test."],
+        },
+        "Which opportunities have quality or logical risk flags?": {
+            "sql": f"""
+SELECT
+  listing_id,
+  make,
+  model,
+  fuel_type,
+  actual_price_eur,
+  expected_price_gap_eur,
+  top_price_probability,
+  decision_flag,
+  price_outlier_iqr,
+  mileage_outlier_iqr,
+  power_outlier_iqr,
+  logical_issue
+FROM {view}
+WHERE expected_price_gap_eur < 0
+  AND (
+    price_outlier_iqr = TRUE
+    OR mileage_outlier_iqr = TRUE
+    OR power_outlier_iqr = TRUE
+    OR logical_issue = TRUE
+  )
+ORDER BY top_price_probability DESC, expected_price_gap_eur ASC
+LIMIT 50
+""",
+            "business_intent": "Surface promising listings that still need quality or logic-risk review.",
+            "expected_output": "Listing-level opportunity queue with risk flags visible.",
+            "chart_type": "table",
+            "confidence": "high",
+            "limitations": ["Quality flags explain risk, not final acquisition rejection."],
+        },
+        "How many listings fall into each decision flag?": {
+            "sql": f"""
+SELECT
+  decision_flag,
+  COUNT(*) AS listing_count,
+  AVG(actual_price_eur) AS avg_actual_price_eur,
+  AVG(expected_price_gap_eur) AS avg_expected_price_gap_eur,
+  AVG(top_price_probability) AS avg_top_price_probability
+FROM {view}
+GROUP BY decision_flag
+ORDER BY listing_count DESC
+LIMIT 20
+""",
+            "business_intent": "Summarize the portfolio by governed BI decision flag.",
+            "expected_output": "Decision-flag distribution with average price and model signals.",
+            "chart_type": "bar",
+            "confidence": "high",
+            "limitations": ["This summarizes BI-view signals only, before local Streamlit strategy filters."],
+        },
+    }
+
+
+def build_semantic_layer(project_id: str, dataset_id: str) -> str:
+    field_lines = []
+    for column in REQUIRED_COLUMNS:
+        meaning = BI_FIELD_MEANINGS.get(column, "allowed BI view field")
+        field_lines.append(f"- {column}: {meaning}")
+    flag_lines = [f"- {flag}: {meaning}" for flag, meaning in DECISION_FLAG_MEANINGS.items()]
+    return f"""
+Governed BI query surface:
+Allowed table: {allowed_bi_view(project_id, dataset_id)}
+
+Allowed fields:
+{chr(10).join(field_lines)}
+
+Decision flag meanings:
+{chr(10).join(flag_lines)}
+
+Quality and risk flags should not be ignored when making recommendations:
+price_outlier_iqr, mileage_outlier_iqr, power_outlier_iqr, logical_issue.
+"""
+
+
+def build_sql_generation_prompt(question: str, project_id: str, dataset_id: str) -> str:
+    return f"""
+You are generating BigQuery Standard SQL for a read-only BI assistant.
+This is a conversational decision-support layer over a governed BI data product.
+The LLM writes candidate SQL. The application owns validation. BigQuery owns the data. The user owns the decision.
+
+{build_semantic_layer(project_id, dataset_id)}
+
+Return JSON only with this schema:
+{{
+  "sql": "SELECT ...",
+  "business_intent": "short explanation of the user's business question",
+  "expected_output": "what the query is expected to return",
+  "chart_type": "table|bar|scatter|line|none",
+  "confidence": "high|medium|low",
+  "limitations": ["limitation 1", "limitation 2"]
+}}
+
+Rules:
+- Return JSON only.
+- Generate one SQL statement only.
+- Generate SELECT queries only.
+- Never generate INSERT, UPDATE, DELETE, MERGE, CREATE, DROP, ALTER, TRUNCATE, GRANT, REVOKE, CALL or EXECUTE.
+- Never query INFORMATION_SCHEMA.
+- Never include SQL comments.
+- Never use SELECT *.
+- Never invent columns.
+- Use only the columns listed in the semantic layer.
+- Prefer aggregation for broad questions.
+- For listing-level results, always include LIMIT 100 or less.
+- Use BigQuery-safe snake_case aliases only. Do not use spaces, punctuation, parentheses, or backticks in aliases.
+- For "best opportunities", prioritize decision_flag = 'high_priority_review', expected_price_gap_eur < 0,
+  high top_price_probability, and no logical_issue when relevant.
+- If the question is ambiguous, make a conservative assumption and state it in the JSON limitations.
+- Do not answer with SQL that requires local Streamlit-calculated fields such as expected_total_profit,
+  expected_roi, vehicle_margin, finance_margin, cross_sell_income or investment_score.
+
+User question:
+{question}
+"""
+
+
+def parse_gemini_json(text: str) -> tuple[dict[str, Any] | None, str | None]:
+    if not text or not text.strip():
+        return None, "Gemini returned an empty response."
+
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    start = cleaned.find("{")
+    if start == -1:
+        return None, "Gemini response did not contain a JSON object."
+
+    depth = 0
+    in_string = False
+    escape = False
+    end = -1
+    for position, char in enumerate(cleaned[start:], start=start):
+        if escape:
+            escape = False
+            continue
+        if char == "\\":
+            escape = True
+            continue
+        if char == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                end = position + 1
+                break
+
+    if end == -1:
+        return None, "Gemini response contained incomplete JSON."
 
     try:
-        from google import genai
+        parsed = json.loads(cleaned[start:end])
+    except json.JSONDecodeError as exc:
+        return None, f"Gemini JSON could not be parsed: {exc.msg}."
+    if not isinstance(parsed, dict):
+        return None, "Gemini JSON must be an object."
+    return parsed, None
 
-        client = genai.Client(api_key=api_key)
-        model_name = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash")
-        response = client.models.generate_content(model=model_name, contents=prompt)
-        return response.text or "Gemini returned an empty memo."
+
+def generate_sql_with_gemini(question: str, project_id: str, dataset_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    text, error = generate_gemini_content(build_sql_generation_prompt(question, project_id, dataset_id))
+    if error:
+        return None, error
+    return parse_gemini_json(text or "")
+
+
+def strip_sql_comments(sql: str) -> tuple[str, bool]:
+    cleaned: list[str] = []
+    index = 0
+    in_single_quote = False
+    in_double_quote = False
+    removed = False
+
+    while index < len(sql):
+        char = sql[index]
+        next_char = sql[index + 1] if index + 1 < len(sql) else ""
+
+        if char == "'" and not in_double_quote:
+            in_single_quote = not in_single_quote
+            cleaned.append(char)
+            index += 1
+            continue
+        if char == '"' and not in_single_quote:
+            in_double_quote = not in_double_quote
+            cleaned.append(char)
+            index += 1
+            continue
+
+        if not in_single_quote and not in_double_quote and char == "-" and next_char == "-":
+            removed = True
+            index += 2
+            while index < len(sql) and sql[index] not in "\r\n":
+                index += 1
+            continue
+
+        if not in_single_quote and not in_double_quote and char == "/" and next_char == "*":
+            removed = True
+            index += 2
+            while index + 1 < len(sql) and not (sql[index] == "*" and sql[index + 1] == "/"):
+                index += 1
+            index += 2
+            continue
+
+        cleaned.append(char)
+        index += 1
+
+    normalized = "\n".join(line.rstrip() for line in "".join(cleaned).splitlines() if line.strip())
+    return normalized, removed
+
+
+def safe_bigquery_alias(alias: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_]+", "_", alias.strip()).strip("_").lower()
+    if not cleaned:
+        cleaned = "field_alias"
+    if cleaned[0].isdigit():
+        cleaned = f"field_{cleaned}"
+    return cleaned[:300]
+
+
+def sanitize_sql_aliases(sql: str) -> tuple[str, bool]:
+    changed = False
+
+    def replace_alias(match: re.Match) -> str:
+        nonlocal changed
+        alias = match.group(1)
+        safe_alias = safe_bigquery_alias(alias)
+        if alias != safe_alias:
+            changed = True
+        return f"AS {safe_alias}"
+
+    sanitized = re.sub(r"(?is)\bAS\s+`([^`]+)`", replace_alias, sql)
+    return sanitized, changed
+
+
+def validate_sql(sql: str, project_id: str, dataset_id: str, chart_type: str | None = None) -> dict[str, Any]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    normalized_sql = (sql or "").strip()
+
+    if not normalized_sql:
+        return {"is_valid": False, "errors": ["SQL is empty."], "warnings": warnings, "normalized_sql": ""}
+
+    if re.search(r"(--|/\*|\*/)", normalized_sql):
+        errors.append("Comments are not allowed in generated SQL.")
+
+    if normalized_sql.count(";") > 1 or ";" in normalized_sql.rstrip(";"):
+        errors.append("Multiple SQL statements or semicolon followed by more text are not allowed.")
+    normalized_sql = normalized_sql.rstrip().rstrip(";").strip()
+
+    if not re.match(r"(?is)^\s*(SELECT|WITH)\b", normalized_sql):
+        errors.append("Only SELECT or WITH queries are allowed.")
+
+    forbidden = r"\b(INSERT|UPDATE|DELETE|MERGE|CREATE|DROP|ALTER|TRUNCATE|GRANT|REVOKE|CALL|EXECUTE)\b"
+    if re.search(forbidden, normalized_sql, flags=re.IGNORECASE):
+        errors.append("SQL contains a forbidden write, DDL, permission, or execution keyword.")
+
+    if re.search(r"\bINFORMATION_SCHEMA\b", normalized_sql, flags=re.IGNORECASE):
+        errors.append("INFORMATION_SCHEMA queries are not allowed.")
+
+    select_star_pattern = (
+        r"(?is)(\bSELECT\s+(?:`?[A-Za-z_][A-Za-z0-9_]*`?\.)?\*"
+        r"|,\s*(?:`?[A-Za-z_][A-Za-z0-9_]*`?\.)?\*)"
+    )
+    if re.search(select_star_pattern, normalized_sql):
+        errors.append("SELECT * is not allowed. Select explicit BI fields.")
+
+    allowed_ref = f"{project_id}.{dataset_id}.vw_bi_dashboard"
+    allowed_quoted = allowed_bi_view(project_id, dataset_id)
+
+    backtick_refs = re.findall(r"`([^`]+)`", normalized_sql)
+    for ref in backtick_refs:
+        if "." in ref and ref != allowed_ref:
+            errors.append(f"External table reference is not allowed: `{ref}`.")
+
+    cte_names = {
+        match.lower()
+        for match in re.findall(r"(?is)(?:WITH|,)\s*([A-Za-z_][A-Za-z0-9_]*)\s+AS\s*\(", normalized_sql)
+    }
+    table_refs = re.findall(r"(?is)\b(?:FROM|JOIN)\s+([`A-Za-z0-9_.-]+)", normalized_sql)
+    allowed_unquoted = allowed_ref
+    found_allowed_view = False
+    for ref in table_refs:
+        clean_ref = ref.strip().rstrip(",")
+        if clean_ref.startswith("("):
+            continue
+        if clean_ref == allowed_quoted or clean_ref.strip("`") == allowed_unquoted:
+            found_allowed_view = True
+            continue
+        if clean_ref.lower() in cte_names:
+            continue
+        errors.append(f"Only the governed BI view can be queried. Unexpected table reference: {clean_ref}.")
+
+    if not found_allowed_view:
+        errors.append("Query must read from the governed BI dashboard view.")
+
+    has_group_by = bool(re.search(r"(?is)\bGROUP\s+BY\b", normalized_sql))
+    has_limit = bool(re.search(r"(?is)\bLIMIT\s+\d+\b", normalized_sql))
+    if not has_limit and not has_group_by:
+        warnings.append("Listing-level query had no LIMIT. LIMIT 100 was appended.")
+        normalized_sql = f"{normalized_sql}\nLIMIT 100"
+    elif has_limit:
+        limits = [int(value) for value in re.findall(r"(?is)\bLIMIT\s+(\d+)\b", normalized_sql)]
+        if limits and max(limits) > 100 and not has_group_by:
+            errors.append("Listing-level queries must use LIMIT 100 or less.")
+
+    if chart_type == "scatter":
+        warnings.append("Scatter charts require at least two numeric result columns.")
+    elif chart_type in {"bar", "line"}:
+        warnings.append(f"{chart_type.title()} charts require a compatible category/date column and numeric value.")
+
+    return {"is_valid": not errors, "errors": errors, "warnings": warnings, "normalized_sql": normalized_sql}
+
+
+def bigquery_query_error_message(exc: Exception, stage: str) -> str:
+    detail = getattr(exc, "message", "") or str(exc)
+    if "bytesBilledLimitExceeded" in detail or "bytes billed" in detail.lower():
+        return (
+            f"{stage} was blocked by the BigQuery bytes-billed cap. "
+            f"The current cap is {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB. "
+            "Set `BQ_MAX_BYTES_BILLED_MB=100` before launching Streamlit if you want to allow this classroom query."
+        )
+    return f"{stage} failed because BigQuery rejected the SQL: {detail}"
+
+
+def run_validated_query(sql: str, project_id: str) -> tuple[pd.DataFrame | None, dict[str, Any]]:
+    metadata: dict[str, Any] = {
+        "estimated_bytes": None,
+        "estimated_mb": None,
+        "errors": [],
+        "warnings": [],
+        "executed": False,
+    }
+    try:
+        client = bigquery.Client(project=project_id)
+    except DefaultCredentialsError:
+        metadata["errors"].append(
+            "BigQuery credentials are not configured. Run `gcloud auth application-default login` or configure service account credentials."
+        )
+        return None, metadata
     except Exception:
-        return "Gemini memo generation failed. Check the API key, Gemini model name, and network access."
+        metadata["errors"].append("BigQuery client could not be created. Check Google Cloud credentials and project access.")
+        return None, metadata
+
+    dry_run_config = bigquery.QueryJobConfig(
+        dry_run=True,
+        maximum_bytes_billed=MAX_BYTES_BILLED,
+        use_query_cache=False,
+    )
+    try:
+        dry_run_job = client.query(sql, job_config=dry_run_config)
+        estimated_bytes = int(dry_run_job.total_bytes_processed or 0)
+        metadata["estimated_bytes"] = estimated_bytes
+        metadata["estimated_mb"] = estimated_bytes / (1024 * 1024)
+    except BadRequest as exc:
+        metadata["errors"].append(bigquery_query_error_message(exc, "Dry-run"))
+        return None, metadata
+    except Forbidden:
+        metadata["errors"].append("Dry-run failed because the current credentials do not have BigQuery permission.")
+        return None, metadata
+    except GoogleAPIError as exc:
+        metadata["errors"].append(bigquery_query_error_message(exc, "Dry-run"))
+        return None, metadata
+    except Exception:
+        metadata["errors"].append("Dry-run failed. Check the generated SQL and BigQuery configuration.")
+        return None, metadata
+
+    if metadata["estimated_bytes"] is not None and metadata["estimated_bytes"] > MAX_BYTES_BILLED:
+        metadata["errors"].append(
+            f"Query estimate is {metadata['estimated_mb']:.2f} MB, above the classroom limit of "
+            f"{MAX_BYTES_BILLED / (1024 * 1024):.0f} MB."
+        )
+        return None, metadata
+
+    execution_config = bigquery.QueryJobConfig(maximum_bytes_billed=MAX_BYTES_BILLED)
+    try:
+        df = client.query(sql, job_config=execution_config).to_dataframe()
+        metadata["executed"] = True
+        if df.empty:
+            metadata["warnings"].append("Query ran successfully but returned no rows.")
+        return df, metadata
+    except BadRequest as exc:
+        metadata["errors"].append(bigquery_query_error_message(exc, "Execution"))
+    except Forbidden:
+        metadata["errors"].append("Execution failed because the current credentials do not have BigQuery permission.")
+    except GoogleAPIError as exc:
+        metadata["errors"].append(bigquery_query_error_message(exc, "Execution"))
+    except Exception:
+        metadata["errors"].append("Execution failed. Check credentials, query permissions, and network access.")
+    return None, metadata
+
+
+def render_ai_chart(df: pd.DataFrame, chart_type: str) -> None:
+    if df.empty or chart_type in {"table", "none"}:
+        return
+    try:
+        numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
+        categorical_columns = [
+            column for column in df.columns if column not in numeric_columns and not pd.api.types.is_datetime64_any_dtype(df[column])
+        ]
+
+        if chart_type == "bar" and categorical_columns and numeric_columns:
+            fig = px.bar(df, x=categorical_columns[0], y=numeric_columns[0])
+        elif chart_type == "scatter" and len(numeric_columns) >= 2:
+            color = categorical_columns[0] if categorical_columns else None
+            fig = px.scatter(df, x=numeric_columns[0], y=numeric_columns[1], color=color)
+        elif chart_type == "line" and numeric_columns:
+            x_candidates = [
+                column
+                for column in df.columns
+                if "date" in column.lower() or "year" in column.lower() or pd.api.types.is_datetime64_any_dtype(df[column])
+            ]
+            if not x_candidates:
+                st.info("No date or year-like column was available for the suggested line chart.")
+                return
+            fig = px.line(df.sort_values(x_candidates[0]), x=x_candidates[0], y=numeric_columns[0])
+        else:
+            st.info("The suggested chart type is not compatible with the returned columns.")
+            return
+        st.plotly_chart(fig, use_container_width=True)
+    except Exception:
+        st.warning("The result table loaded, but chart rendering failed for these columns.")
+
+
+def deterministic_ai_summary(df: pd.DataFrame, metadata: dict[str, Any]) -> str:
+    if df is None or df.empty:
+        return "No rows were returned, so there is no business pattern to summarize from this query."
+
+    summary = [f"- Query returned {len(df):,} rows and {len(df.columns):,} columns."]
+    numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
+    if numeric_columns:
+        first_numeric = numeric_columns[0]
+        top = df.sort_values(first_numeric, ascending=False).head(3)
+        values = ", ".join(str(value) for value in top[first_numeric].tolist())
+        summary.append(f"- Top observed values for `{first_numeric}` include: {values}.")
+    else:
+        first_column = df.columns[0]
+        values = ", ".join(str(value) for value in df[first_column].head(3).tolist())
+        summary.append(f"- First returned `{first_column}` values: {values}.")
+    if metadata.get("warnings"):
+        summary.append(f"- Caveat: {metadata['warnings'][0]}")
+    else:
+        summary.append("- Caveat: deterministic fallback summary; no AI interpretation was used.")
+    return "\n".join(summary)
+
+
+def executive_summary(
+    question: str,
+    ai_payload: dict[str, Any],
+    sql: str,
+    df: pd.DataFrame,
+    metadata: dict[str, Any],
+) -> str:
+    if not gemini_available():
+        return deterministic_ai_summary(df, metadata)
+
+    records = df.head(20).to_dict(orient="records") if df is not None else []
+    prompt = f"""
+Write an investment committee interpretation of a governed BI query result.
+
+Rules:
+- Maximum 3 bullets.
+- Separate facts from interpretation.
+- Do not invent numbers.
+- Mention limitations.
+- Use investment committee language.
+
+Original question: {question}
+Business intent: {ai_payload.get("business_intent")}
+Generated SQL: {sql}
+Dataframe shape: {df.shape if df is not None else None}
+First rows as records: {records}
+Limitations: {ai_payload.get("limitations", [])}
+"""
+    result, error = generate_gemini_content(prompt)
+    if error:
+        return deterministic_ai_summary(df, metadata)
+    return result or deterministic_ai_summary(df, metadata)
+
+
+def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
+    st.title("Ask the Data — GenAI SQL Assistant")
+    st.caption("Natural-language questions translated into validated BigQuery SQL over the BI decision-support view.")
+    st.info(
+        "This assistant uses Gemini to generate SQL, but BigQuery remains the source of truth. "
+        "Every AI-generated query is validated and dry-run checked before execution."
+    )
+    st.caption("The LLM writes candidate SQL. The application owns validation. BigQuery owns the data. The user owns the decision.")
+
+    demo_mode = not gemini_available()
+    demo_queries = build_demo_queries(project_id, dataset_id)
+    if demo_mode:
+        reason = gemini_unavailable_message() or "Gemini is unavailable."
+        st.warning(f"Demo Mode: using predefined SQL. {reason}")
+        button_prompts = DEMO_QUESTIONS
+    else:
+        button_prompts = AI_EXAMPLE_PROMPTS
+
+    st.session_state.setdefault("ai_sql_history", [])
+    st.session_state.setdefault("ai_sql_question", "")
+
+    st.write("Example questions")
+    button_columns = st.columns(2)
+    for index, prompt in enumerate(button_prompts):
+        if button_columns[index % 2].button(prompt, key=f"ai_prompt_{index}"):
+            st.session_state["ai_sql_question"] = prompt
+            st.session_state["ai_sql_pending_question"] = prompt
+
+    with st.form("ai_sql_question_form"):
+        question = st.text_input("Ask a business question", value=st.session_state.get("ai_sql_question", ""))
+        submitted = st.form_submit_button("Ask the data")
+
+    if submitted:
+        st.session_state["ai_sql_question"] = question
+        st.session_state["ai_sql_pending_question"] = question
+
+    question = str(st.session_state.pop("ai_sql_pending_question", "")).strip()
+    if not question:
+        if submitted:
+            st.warning("Enter a question or select an example.")
+        return
+
+    if demo_mode:
+        ai_payload = demo_queries.get(question)
+        if ai_payload is None:
+            st.error("Demo Mode can only run the predefined question buttons. Configure Gemini to ask custom questions.")
+            return
+    else:
+        with st.spinner("Asking Gemini to generate governed SQL..."):
+            ai_payload, generation_error = generate_sql_with_gemini(question, project_id, dataset_id)
+        if generation_error:
+            st.error(generation_error)
+            st.info("Try one of the example prompts or simplify the question.")
+            return
+        if ai_payload is None:
+            st.error("Gemini did not return a usable SQL payload.")
+            return
+
+    sql = str(ai_payload.get("sql", "")).strip()
+    sql, comments_removed = strip_sql_comments(sql)
+    sql, aliases_sanitized = sanitize_sql_aliases(sql)
+    chart_type = str(ai_payload.get("chart_type", "table")).lower()
+    if chart_type not in {"table", "bar", "scatter", "line", "none"}:
+        chart_type = "table"
+    validation = validate_sql(sql, project_id, dataset_id, chart_type)
+    if comments_removed:
+        validation["warnings"].append("Gemini included SQL comments; they were removed before validation.")
+    if aliases_sanitized:
+        validation["warnings"].append("Gemini included display-style aliases; they were converted to BigQuery-safe snake_case aliases.")
+
+    st.subheader("Business intent")
+    st.write(ai_payload.get("business_intent", "No business intent was provided."))
+    st.caption(ai_payload.get("expected_output", "No expected output was provided."))
+
+    status_col, scan_col = st.columns(2)
+    with status_col:
+        if validation["is_valid"]:
+            st.success("Validation passed.")
+        else:
+            st.error("Validation blocked this SQL.")
+        for error in validation["errors"]:
+            st.error(error)
+        for warning in validation["warnings"]:
+            st.warning(warning)
+
+    with st.expander("Generated SQL", expanded=True):
+        st.code(validation["normalized_sql"] or sql, language="sql")
+
+    if not validation["is_valid"]:
+        st.info("No BigQuery dry-run or execution was attempted because validation failed.")
+        return
+
+    with st.spinner("Running BigQuery dry-run and executing within the classroom scan limit..."):
+        result_df, metadata = run_validated_query(validation["normalized_sql"], project_id)
+
+    with scan_col:
+        if metadata.get("estimated_mb") is None:
+            st.metric("Estimated BigQuery scan", "Unavailable")
+        else:
+            st.metric("Estimated BigQuery scan", f"{metadata['estimated_mb']:.2f} MB")
+        st.caption(f"Classroom maximum bytes billed: {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB")
+
+    for error in metadata["errors"]:
+        st.error(error)
+    for warning in metadata["warnings"]:
+        st.warning(warning)
+    if metadata["errors"] or result_df is None:
+        st.info("Adjust the question or credentials, then run the assistant again.")
+        return
+
+    st.subheader("Result table")
+    st.dataframe(result_df, use_container_width=True, hide_index=True)
+
+    st.subheader("Suggested chart")
+    render_ai_chart(result_df, chart_type)
+
+    st.subheader("Executive interpretation")
+    st.markdown(executive_summary(question, ai_payload, validation["normalized_sql"], result_df, metadata))
+
+    limitations = ai_payload.get("limitations", [])
+    if limitations:
+        with st.expander("Caveats and limitations", expanded=False):
+            for limitation in limitations:
+                st.write(f"- {limitation}")
+
+    st.session_state["ai_sql_history"].append(
+        {
+            "question": question,
+            "sql": validation["normalized_sql"],
+            "rows": len(result_df),
+            "estimated_mb": metadata.get("estimated_mb"),
+        }
+    )
+    if st.session_state["ai_sql_history"]:
+        with st.expander("Session history", expanded=False):
+            st.dataframe(pd.DataFrame(st.session_state["ai_sql_history"]).tail(10), use_container_width=True, hide_index=True)
 
 
 def main() -> None:
@@ -1457,7 +2194,13 @@ def main() -> None:
         customized,
     )
 
-    tab_committee, tab_builder = st.tabs(["Committee Dashboard", "Strategy & Portfolio Builder"])
+    tab_committee, tab_builder, tab_ai = st.tabs(
+        [
+            "Committee Dashboard",
+            "Strategy & Portfolio Builder",
+            "Ask the Data — GenAI SQL Assistant",
+        ]
+    )
 
     with tab_committee:
         st.title("Vehicle Portfolio Investment Simulator")
@@ -1572,6 +2315,9 @@ def main() -> None:
 - The model provides decision signals; the business strategy defines the portfolio.
 """
         )
+
+    with tab_ai:
+        render_ai_sql_assistant_tab(project_id, dataset_id)
 
 
 if __name__ == "__main__":

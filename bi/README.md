@@ -54,33 +54,42 @@ Alternatively, configure service account credentials in your execution environme
 
 If credentials are missing or invalid, the app shows a business-friendly error instead of a raw traceback.
 
-## Gemini API Key
+The GenAI SQL assistant dry-runs every query and applies a classroom bytes-billed cap. The default is 50 MB. If BigQuery reports that a governed-view query requires a higher minimum billed amount, launch Streamlit with a larger local cap:
 
-The committee memo is optional. To enable it, configure a Gemini API key in one of these places:
-
-1. Streamlit secrets: `.streamlit/secrets.toml`
-2. Environment variable: `GEMINI_API_KEY`
-
-Use the example file:
-
-```toml
-GEMINI_API_KEY = "your_gemini_api_key_here"
+```powershell
+$env:BQ_MAX_BYTES_BILLED_MB="100"
+streamlit run bi/streamlit_app.py
 ```
 
-The repository includes only:
+## Gemini API Key
 
-- `.streamlit/secrets.toml.example`
+Gemini is optional. The committee memo and GenAI SQL assistant use the `google-genai` package when it is installed and an API key is available.
 
-Never commit a real `.streamlit/secrets.toml` file.
+This repo reads Gemini credentials from environment variables only. It does not read Gemini keys from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or any committed credential file.
+
+In PowerShell, configure one of:
+
+```powershell
+$env:GEMINI_API_KEY="your_api_key_here"
+```
+
+or:
+
+```powershell
+$env:GOOGLE_API_KEY="your_api_key_here"
+```
+
+`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If neither variable is set, the dashboard keeps working with deterministic/default behavior. The app does not create, print, log, hardcode, or commit API keys.
 
 ## Dashboard Structure
 
-The app has exactly two tabs:
+The app has three tabs:
 
 1. `Committee Dashboard`
 2. `Strategy & Portfolio Builder`
+3. `Ask the Data — GenAI SQL Assistant`
 
-The first tab is the executive decision screen. The second tab is the interactive working screen for strategy tuning and portfolio construction.
+The first tab is the executive decision screen. The second tab is the interactive working screen for strategy tuning and portfolio construction. The third tab is a governed text-to-SQL assistant over the BI dashboard view.
 
 ## Vehicle Strategy Presets
 
