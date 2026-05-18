@@ -151,6 +151,8 @@ The memo includes:
 7. Generate the Gemini committee memo.
 8. Conclude: "The model does not decide the strategy; it allows the committee to compare strategies with data."
 
+Do not explain every formula during the demo. Focus on how changing the business strategy changes the eligible universe, the selected portfolio, the value drivers, and the committee recommendation.
+
 ## Teaching Message
 
 - The dashboard is the final decision layer of the pipeline.
@@ -158,6 +160,8 @@ The memo includes:
 - Classification creates commercial attractiveness.
 - Business assumptions create the investment strategy.
 - BI converts all of this into a committee-ready decision product.
+
+The model does not decide the strategy; it allows the committee to compare strategies with data.
 
 ## Decision-Support Disclaimer
 

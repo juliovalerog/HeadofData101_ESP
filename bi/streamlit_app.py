@@ -1050,6 +1050,33 @@ def render_committee_decision(summary: dict[str, float], risk_warnings: list[str
         for risk in risks:
             st.markdown(f"- {risk}")
 
+    st.caption(
+        "The decision status is a simulation output for committee discussion. It is not a final acquisition, "
+        "credit, compliance, or risk approval."
+    )
+
+
+def main_risk_driver(metrics: dict[str, float]) -> tuple[str, str]:
+    if metrics["model_output_coverage"] < 0.90:
+        return "Low model output coverage", "Model signals are missing for a material share of the vehicle universe."
+    if metrics["selected_quality_share"] > 0:
+        return "Selected vehicle quality flags", "Some selected vehicles require manual quality review before action."
+    if metrics["fuel_concentration"] > 0.70:
+        return "Fuel type concentration", "The selected portfolio is concentrated in one fuel type."
+    if metrics["price_band_concentration"] > 0.70:
+        return "Price band concentration", "The selected portfolio is concentrated in one purchase price band."
+    if metrics["cross_sell_dependency"] > 0.50:
+        return (
+            "Cross-sell dependency",
+            "Cross-sell dependency means expected profit relies materially on commercial attach-rate assumptions.",
+        )
+    if metrics["budget_used"] < 0.50:
+        return (
+            "Low budget deployment",
+            "Low budget deployment means the current mandate may be too restrictive to absorb available capital.",
+        )
+    return "No major risk driver detected", "The current risk indicators do not show a dominant single concern."
+
 
 def render_risk_confidence(metrics: dict[str, float], warnings: list[str]) -> None:
     row1 = st.columns(3)
@@ -1062,6 +1089,9 @@ def render_risk_confidence(metrics: dict[str, float], warnings: list[str]) -> No
     row2[1].metric("Highest fuel concentration", fmt_pct(metrics["fuel_concentration"]))
     row2[2].metric("Highest price band concentration", fmt_pct(metrics["price_band_concentration"]))
     row2[3].metric("Cross-sell dependency ratio", fmt_pct(metrics["cross_sell_dependency"]))
+
+    driver, explanation = main_risk_driver(metrics)
+    st.markdown(f"**Main risk driver:** {driver}. {explanation}")
 
     for warning in warnings:
         st.warning(warning)
@@ -1239,7 +1269,32 @@ def selected_table(selected: pd.DataFrame) -> pd.DataFrame:
         "logical_issue",
     ]
     table = selected[[column for column in columns if column in selected.columns]].copy()
-    return table.rename(columns={"top_price_probability": "commercial_attractiveness_score"})
+    return table.rename(
+        columns={
+            "listing_id": "Listing ID",
+            "make": "Make",
+            "model": "Model",
+            "fuel_type": "Fuel type",
+            "actual_price_eur": "Purchase price",
+            "expected_price_eur": "Expected market price",
+            "expected_discount_pct": "Expected discount %",
+            "top_price_probability": "Commercial attractiveness score",
+            "vehicle_margin": "Vehicle margin",
+            "finance_margin": "Financing margin",
+            "insurance_income": "Insurance income",
+            "fuel_card_income": "Fuel card income",
+            "payroll_income": "Payroll income",
+            "cross_sell_income": "Cross-sell income",
+            "expected_total_profit": "Expected profit",
+            "expected_roi": "Expected ROI",
+            "investment_score": "Investment score",
+            "recommended_action": "Recommended action",
+            "price_outlier_iqr": "Price outlier flag",
+            "mileage_outlier_iqr": "Mileage outlier flag",
+            "power_outlier_iqr": "Power outlier flag",
+            "logical_issue": "Logical issue flag",
+        }
+    )
 
 
 def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
@@ -1432,6 +1487,10 @@ def main() -> None:
 
         st.subheader("Profit Component Chart")
         component_chart(summary)
+        st.caption(
+            "Profit components reconcile to expected total profit. Resale spread and income components are shown "
+            "as positive values; costs are shown as negative values."
+        )
 
         st.subheader("Risk & Confidence")
         render_risk_confidence(risk_metrics, risk_warnings)
@@ -1488,7 +1547,7 @@ def main() -> None:
         scatter_chart(eligible_with_actions)
 
         st.subheader("Selected Portfolio")
-        table = selected_table(selected_with_actions).sort_values("investment_score", ascending=False)
+        table = selected_table(selected_with_actions).sort_values("Investment score", ascending=False)
         st.dataframe(table, use_container_width=True, hide_index=True)
         st.download_button(
             "Download selected portfolio CSV",
