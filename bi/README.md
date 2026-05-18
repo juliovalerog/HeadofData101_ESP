@@ -23,8 +23,8 @@ The app reads `gcp_project_id` and `bq_dataset` from:
 The upstream pipeline provides:
 
 - Regression output: `expected_price_eur`
-- Classification output: `top_price_probability`
-- BI view: listing profile, actual price, expected-price gap, top-price signal, and decision flag
+- Classification output: commercial attractiveness score from `top_price_probability`
+- BI view: listing profile, actual price, expected-price gap, commercial attractiveness signal, and decision flag
 
 Dashboard-specific investment, financing, cross-sell, risk, and portfolio-selection metrics are computed inside Streamlit.
 
@@ -88,7 +88,7 @@ Vehicle strategy presets define the investment mandate. They do not change model
 
 - `Broad Market`: wide opportunity discovery with minimal filtering.
 - `Young Low-Mileage Core`: cleaner, easier-to-sell portfolio with stricter age and mileage filters.
-- `Efficient Engine Campaign`: coherent campaign around practical, efficient, mass-market vehicles.
+- `Mainstream Retail Campaign`: coherent campaign around mainstream, easy-to-explain vehicles.
 - `Higher-Ticket Margin`: higher unit profit with stronger capital concentration risk.
 - `Conservative Risk`: defensibility over volume, with stronger quality and model-signal thresholds.
 
@@ -114,7 +114,7 @@ For each eligible vehicle, the app estimates:
 - conservative resale price
 - vehicle resale margin
 - capital deployed
-- finance margin
+- finance margin after expected weighted APR discounts
 - insurance, fuel card, payroll transfer, and loyalty value
 - inventory funding cost
 - expected total profit
@@ -123,7 +123,7 @@ For each eligible vehicle, the app estimates:
 - portfolio fit weight
 - investment score
 
-The portfolio is selected greedily by investment score until the budget, cash buffer, or maximum vehicle count is reached.
+The recommended portfolio under the current strategy is selected by a transparent ranking rule. Vehicles are ranked by investment score and selected until the budget, cash buffer, or maximum vehicle count is reached. This is not a full mathematical optimization model.
 
 ## Gemini Committee Memo
 
@@ -139,6 +139,25 @@ The memo includes:
 6. Cross-Sell and Loyalty Logic
 7. Main Risks and Model Limitations
 8. Suggested Next Validation Steps
+
+## Suggested 10-Minute Live Demo
+
+1. Start with `Base Case` and `Broad Market`.
+2. Explain the committee decision box.
+3. Switch to `Aggressive Cross-Sell` and show how value drivers change.
+4. Switch to `Conservative Risk` and show how the eligible universe shrinks.
+5. Adjust investment budget and show selected portfolio changes.
+6. Modify age and mileage filters and explain the investment mandate.
+7. Generate the Gemini committee memo.
+8. Conclude: "The model does not decide the strategy; it allows the committee to compare strategies with data."
+
+## Teaching Message
+
+- The dashboard is the final decision layer of the pipeline.
+- Regression creates expected market price.
+- Classification creates commercial attractiveness.
+- Business assumptions create the investment strategy.
+- BI converts all of this into a committee-ready decision product.
 
 ## Decision-Support Disclaimer
 

@@ -43,7 +43,7 @@ REQUIRED_COLUMNS = [
 VEHICLE_PRESETS = [
     "Broad Market",
     "Young Low-Mileage Core",
-    "Efficient Engine Campaign",
+    "Mainstream Retail Campaign",
     "Higher-Ticket Margin",
     "Conservative Risk",
 ]
@@ -193,14 +193,9 @@ def quantile(df: pd.DataFrame, column: str, q: float) -> float:
     return float(values.quantile(q))
 
 
-def efficient_fuel_defaults(fuel_types: list[str]) -> list[str]:
-    efficient_keywords = ["diesel", "hybrid", "electric", "petrol", "gasoline", "d", "b"]
-    selected = [
-        fuel
-        for fuel in fuel_types
-        if any(keyword == fuel.lower() or keyword in fuel.lower() for keyword in efficient_keywords)
-    ]
-    return selected[:3] if selected else fuel_types[:3]
+def mainstream_fuel_defaults(df: pd.DataFrame, fuel_types: list[str]) -> list[str]:
+    frequent_fuels = df["fuel_type"].dropna().astype(str).value_counts().head(3).index.tolist()
+    return frequent_fuels if frequent_fuels else fuel_types[:3]
 
 
 def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]:
@@ -241,12 +236,12 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
             "exclude_logical_issue": True,
             "expected_days_to_resale": 75,
         },
-        "Efficient Engine Campaign": {
+        "Mainstream Retail Campaign": {
             "age_range": (age_min, min(age_max, q("age_years", 0.75))),
             "mileage_range": (mileage_min, min(mileage_max, q("mileage_km", 0.70))),
             "power_range": (power_min, power_max),
             "price_range": (q("actual_price_eur", 0.10), q("actual_price_eur", 0.80)),
-            "fuel_types": efficient_fuel_defaults(fuel_types),
+            "fuel_types": mainstream_fuel_defaults(df, fuel_types),
             "min_top_price_probability": 0.40,
             "min_expected_discount_pct": 0.02,
             "exclude_price_outlier": False,
@@ -411,21 +406,38 @@ def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
     }
 
 
-def populate_defaults_if_needed(vehicle_preset: str, pricing_preset: str, vehicle_defaults: dict, pricing_defaults: dict) -> None:
-    previous = st.session_state.get("_active_presets")
-    current = (vehicle_preset, pricing_preset)
-    if previous == current:
-        return
+def set_prefixed_defaults(prefix: str, defaults: dict[str, Any]) -> None:
+    for key, value in defaults.items():
+        st.session_state[f"{prefix}_{key}"] = value * 100 if key in PERCENT_SLIDER_KEYS else value
 
-    for key, value in vehicle_defaults[vehicle_preset].items():
-        st.session_state[f"vehicle_{key}"] = value * 100 if key in PERCENT_SLIDER_KEYS else value
-    for key, value in pricing_defaults[pricing_preset].items():
-        st.session_state[f"pricing_{key}"] = value * 100 if key in PERCENT_SLIDER_KEYS else value
+
+def reset_all_assumptions(vehicle_preset: str, pricing_preset: str, vehicle_defaults: dict, pricing_defaults: dict) -> None:
+    set_prefixed_defaults("vehicle", vehicle_defaults[vehicle_preset])
+    set_prefixed_defaults("pricing", pricing_defaults[pricing_preset])
     st.session_state["budget_eur"] = 3_000_000
     st.session_state["max_vehicles"] = 100
     st.session_state["cash_buffer_pct"] = 0.0
     st.session_state["allow_missing_model_outputs"] = False
-    st.session_state["_active_presets"] = current
+    st.session_state["_active_vehicle_preset"] = vehicle_preset
+    st.session_state["_active_pricing_preset"] = pricing_preset
+
+
+def populate_defaults_if_needed(vehicle_preset: str, pricing_preset: str, vehicle_defaults: dict, pricing_defaults: dict) -> None:
+    if "budget_eur" not in st.session_state:
+        st.session_state["budget_eur"] = 3_000_000
+    if "max_vehicles" not in st.session_state:
+        st.session_state["max_vehicles"] = 100
+    if "cash_buffer_pct" not in st.session_state:
+        st.session_state["cash_buffer_pct"] = 0.0
+    if "allow_missing_model_outputs" not in st.session_state:
+        st.session_state["allow_missing_model_outputs"] = False
+
+    if st.session_state.get("_active_vehicle_preset") != vehicle_preset:
+        set_prefixed_defaults("vehicle", vehicle_defaults[vehicle_preset])
+        st.session_state["_active_vehicle_preset"] = vehicle_preset
+    if st.session_state.get("_active_pricing_preset") != pricing_preset:
+        set_prefixed_defaults("pricing", pricing_defaults[pricing_preset])
+        st.session_state["_active_pricing_preset"] = pricing_preset
 
 
 def percent_slider(label: str, key: str, min_value: float, max_value: float, step: float = 0.5) -> float:
@@ -441,6 +453,10 @@ def render_sidebar(df: pd.DataFrame) -> tuple[str, str, dict[str, Any], dict[str
     vehicle_defaults = build_vehicle_preset_defaults(df)
     pricing_defaults = pricing_preset_defaults()
     populate_defaults_if_needed(vehicle_preset, pricing_preset, vehicle_defaults, pricing_defaults)
+
+    if st.sidebar.button("Reset all assumptions"):
+        reset_all_assumptions(vehicle_preset, pricing_preset, vehicle_defaults, pricing_defaults)
+        st.rerun()
 
     st.sidebar.info(
         "Strategy presets are business assumptions. They define the investment mandate and commercial campaign "
@@ -465,12 +481,13 @@ def render_sidebar(df: pd.DataFrame) -> tuple[str, str, dict[str, Any], dict[str
         price_range = st.slider("Purchase price range", price_min, price_max, key="vehicle_price_range")
         fuel_types = st.multiselect("Fuel types", fuel_options, key="vehicle_fuel_types")
         min_top_price_probability = percent_slider(
-            "Minimum top-price probability",
+            "Minimum commercial attractiveness score",
             "vehicle_min_top_price_probability",
             0.0,
             100.0,
             1.0,
         )
+        st.caption("This score comes from the upstream classification model field `top_price_probability`.")
         min_expected_discount_pct = percent_slider(
             "Minimum expected discount %",
             "vehicle_min_expected_discount_pct",
@@ -647,23 +664,39 @@ def compute_economics(
     result["expected_discount_eur"] = result["expected_price_eur"] - result["actual_price_eur"]
     result["expected_discount_pct"] = safe_divide(result["expected_discount_eur"], result["expected_price_eur"])
     result["conservative_resale_price"] = result["expected_price_eur"] * (1 - pricing_params["resale_haircut"])
+    result["gross_resale_spread"] = result["conservative_resale_price"] - result["actual_price_eur"]
     result["vehicle_margin"] = (
-        result["conservative_resale_price"]
-        - result["actual_price_eur"]
+        result["gross_resale_spread"]
         - pricing_params["reconditioning_cost"]
         - pricing_params["transaction_cost"]
     )
     result["capital_deployed"] = (
         result["actual_price_eur"] + pricing_params["reconditioning_cost"] + pricing_params["transaction_cost"]
     )
+    result["reconditioning_cost"] = pricing_params["reconditioning_cost"]
+    result["transaction_cost"] = pricing_params["transaction_cost"]
     result["financed_amount"] = result["conservative_resale_price"] * pricing_params["financed_amount_pct"]
 
-    raw_effective_apr = (
-        pricing_params["base_customer_apr"]
-        - pricing_params["insurance_apr_discount"]
-        - pricing_params["fuel_card_apr_discount"]
-        - pricing_params["payroll_apr_discount"]
+    # APR discounts improve the product bundle. The elasticity translates discount size into attach-rate uplift.
+    adjusted_insurance_attach_rate = clipped(
+        pricing_params["insurance_attach_rate"]
+        + pricing_params["attach_rate_elasticity"] * pricing_params["insurance_apr_discount"]
     )
+    adjusted_fuel_card_attach_rate = clipped(
+        pricing_params["fuel_card_attach_rate"]
+        + pricing_params["attach_rate_elasticity"] * pricing_params["fuel_card_apr_discount"]
+    )
+    adjusted_payroll_attach_rate = clipped(
+        pricing_params["payroll_attach_rate"]
+        + pricing_params["attach_rate_elasticity"] * pricing_params["payroll_apr_discount"]
+    )
+    expected_insurance_discount = adjusted_insurance_attach_rate * pricing_params["insurance_apr_discount"]
+    expected_fuel_card_discount = adjusted_fuel_card_attach_rate * pricing_params["fuel_card_apr_discount"]
+    expected_payroll_discount = adjusted_payroll_attach_rate * pricing_params["payroll_apr_discount"]
+    expected_total_apr_discount = (
+        expected_insurance_discount + expected_fuel_card_discount + expected_payroll_discount
+    )
+    raw_effective_apr = pricing_params["base_customer_apr"] - expected_total_apr_discount
     apr_floor = (
         pricing_params["funding_cost_rate"]
         + pricing_params["credit_risk_cost_rate"]
@@ -682,19 +715,9 @@ def compute_economics(
         * pricing_params["financing_take_up_rate"]
     )
 
-    # APR discounts improve the product bundle. The elasticity translates discount size into attach-rate uplift.
-    result["adjusted_insurance_attach_rate"] = clipped(
-        pricing_params["insurance_attach_rate"]
-        + pricing_params["attach_rate_elasticity"] * pricing_params["insurance_apr_discount"]
-    )
-    result["adjusted_fuel_card_attach_rate"] = clipped(
-        pricing_params["fuel_card_attach_rate"]
-        + pricing_params["attach_rate_elasticity"] * pricing_params["fuel_card_apr_discount"]
-    )
-    result["adjusted_payroll_attach_rate"] = clipped(
-        pricing_params["payroll_attach_rate"]
-        + pricing_params["attach_rate_elasticity"] * pricing_params["payroll_apr_discount"]
-    )
+    result["adjusted_insurance_attach_rate"] = adjusted_insurance_attach_rate
+    result["adjusted_fuel_card_attach_rate"] = adjusted_fuel_card_attach_rate
+    result["adjusted_payroll_attach_rate"] = adjusted_payroll_attach_rate
 
     result["insurance_income"] = result["adjusted_insurance_attach_rate"] * pricing_params["insurance_commission"]
     result["fuel_card_income"] = (
@@ -737,9 +760,16 @@ def compute_economics(
     metadata = {
         "raw_effective_customer_apr": raw_effective_apr,
         "effective_customer_apr": effective_customer_apr,
+        "expected_total_apr_discount": expected_total_apr_discount,
+        "expected_insurance_discount": expected_insurance_discount,
+        "expected_fuel_card_discount": expected_fuel_card_discount,
+        "expected_payroll_discount": expected_payroll_discount,
         "apr_floor": apr_floor,
         "apr_floor_applied": effective_customer_apr > raw_effective_apr,
         "net_finance_spread": net_finance_spread,
+        "adjusted_insurance_attach_rate": adjusted_insurance_attach_rate,
+        "adjusted_fuel_card_attach_rate": adjusted_fuel_card_attach_rate,
+        "adjusted_payroll_attach_rate": adjusted_payroll_attach_rate,
     }
     return result.replace([np.inf, -np.inf], np.nan), metadata
 
@@ -749,7 +779,7 @@ def portfolio_fit_weight(df: pd.DataFrame, vehicle_preset: str, vehicle_params: 
         return pd.Series(1.0, index=df.index)
     if vehicle_preset == "Young Low-Mileage Core":
         return (0.80 + 0.20 * normalized_inverse(df["age_years"]) + 0.20 * normalized_inverse(df["mileage_km"])).clip(0.8, 1.2)
-    if vehicle_preset == "Efficient Engine Campaign":
+    if vehicle_preset == "Mainstream Retail Campaign":
         selected_fuels = set(vehicle_params["fuel_types"])
         fuel_reward = df["fuel_type"].isin(selected_fuels).astype(float)
         moderate_price = 1 - (normalized_positive(df["actual_price_eur"]) - 0.5).abs() * 2
@@ -855,13 +885,15 @@ def summarize_portfolio(selected: pd.DataFrame, budget_params: dict[str, Any]) -
             "expected_total_profit": 0.0,
             "expected_roi": 0.0,
             "vehicle_margin": 0.0,
+            "gross_resale_spread": 0.0,
             "finance_margin": 0.0,
             "cross_sell_income": 0.0,
             "insurance_income": 0.0,
             "fuel_card_income": 0.0,
             "payroll_income": 0.0,
             "inventory_funding_cost": 0.0,
-            "reconditioning_transaction_cost": 0.0,
+            "reconditioning_cost": 0.0,
+            "transaction_cost": 0.0,
             "avg_top_price_probability": 0.0,
             "avg_expected_discount_pct": 0.0,
             "avg_expected_profit_per_vehicle": 0.0,
@@ -876,15 +908,15 @@ def summarize_portfolio(selected: pd.DataFrame, budget_params: dict[str, Any]) -
         "expected_total_profit": float(total_profit),
         "expected_roi": float(total_profit / capital) if capital else 0.0,
         "vehicle_margin": float(selected["vehicle_margin"].sum()),
+        "gross_resale_spread": float(selected["gross_resale_spread"].sum()),
         "finance_margin": float(selected["finance_margin"].sum()),
         "cross_sell_income": float(selected["cross_sell_income"].sum()),
         "insurance_income": float(selected["insurance_income"].sum()),
         "fuel_card_income": float(selected["fuel_card_income"].sum()),
         "payroll_income": float(selected["payroll_income"].sum()),
         "inventory_funding_cost": float(selected["inventory_funding_cost"].sum()),
-        "reconditioning_transaction_cost": float(
-            (selected["capital_deployed"] - selected["actual_price_eur"]).sum()
-        ),
+        "reconditioning_cost": float(selected["reconditioning_cost"].sum()),
+        "transaction_cost": float(selected["transaction_cost"].sum()),
         "avg_top_price_probability": float(selected["top_price_probability"].mean()),
         "avg_expected_discount_pct": float(selected["expected_discount_pct"].mean()),
         "avg_expected_profit_per_vehicle": float(selected["expected_total_profit"].mean()),
@@ -919,13 +951,129 @@ def portfolio_warnings(
     return warnings
 
 
+def highest_price_band_concentration(selected: pd.DataFrame) -> float:
+    if selected.empty:
+        return 0.0
+    price_bands = pd.cut(selected["actual_price_eur"], bins=4, duplicates="drop")
+    return float(price_bands.value_counts(normalize=True).iloc[0]) if len(price_bands) else 0.0
+
+
+def risk_confidence_metrics(
+    full_df: pd.DataFrame,
+    eligible: pd.DataFrame,
+    selected: pd.DataFrame,
+    counts: dict[str, int],
+    summary: dict[str, float],
+    budget_params: dict[str, Any],
+) -> dict[str, float]:
+    model_output_coverage = (
+        full_df["expected_price_eur"].notna() & full_df["top_price_probability"].notna()
+    ).mean()
+    eligible_quality_share = float(eligible["quality_issue"].mean()) if not eligible.empty else 0.0
+    selected_quality_share = float(selected["quality_issue"].mean()) if not selected.empty else 0.0
+    fuel_concentration = (
+        float(selected["fuel_type"].value_counts(normalize=True).iloc[0]) if not selected.empty else 0.0
+    )
+    price_concentration = highest_price_band_concentration(selected)
+    cross_sell_dependency = (
+        summary["cross_sell_income"] / summary["expected_total_profit"]
+        if summary["expected_total_profit"] > 0
+        else 0.0
+    )
+    budget_used = summary["capital_deployed"] / budget_params["budget_eur"] if budget_params["budget_eur"] else 0.0
+    return {
+        "model_output_coverage": float(model_output_coverage),
+        "missing_model_outputs_excluded": counts["excluded_by_missing_model_outputs"],
+        "eligible_quality_share": eligible_quality_share,
+        "selected_quality_share": selected_quality_share,
+        "fuel_concentration": fuel_concentration,
+        "price_band_concentration": price_concentration,
+        "cross_sell_dependency": float(cross_sell_dependency),
+        "budget_used": float(budget_used),
+    }
+
+
+def risk_confidence_warnings(metrics: dict[str, float]) -> list[str]:
+    warnings = []
+    if metrics["model_output_coverage"] < 0.90:
+        warnings.append("Model output coverage is below 90%.")
+    if metrics["selected_quality_share"] > 0:
+        warnings.append("The selected portfolio includes vehicles with quality flags.")
+    if metrics["fuel_concentration"] > 0.70:
+        warnings.append("Fuel type concentration is above 70%.")
+    if metrics["price_band_concentration"] > 0.70:
+        warnings.append("Price band concentration is above 70%.")
+    if metrics["cross_sell_dependency"] > 0.50:
+        warnings.append("Cross-sell dependency is above 50% of expected profit.")
+    if metrics["budget_used"] < 0.50:
+        warnings.append("The selected portfolio uses less than 50% of the available budget.")
+    return warnings
+
+
+def committee_decision(summary: dict[str, float], risk_warnings: list[str]) -> tuple[str, list[str], list[str]]:
+    if summary["selected_count"] == 0 or summary["expected_roi"] < 0.05:
+        status = "Do not proceed"
+    elif summary["expected_roi"] >= 0.12 and not risk_warnings:
+        status = "Recommend"
+    else:
+        status = "Review"
+
+    reasons = [
+        f"Selected {summary['selected_count']:,} vehicles under the current mandate.",
+        f"Expected portfolio ROI is {fmt_pct(summary['expected_roi'])}.",
+        f"Expected total profit is {fmt_eur(summary['expected_total_profit'])}.",
+    ]
+    risks = (risk_warnings + [
+        "Validate resale timing, reconditioning capacity, and final purchase conditions.",
+        "Confirm that commercial attach-rate assumptions are realistic for this campaign.",
+        "Review individual vehicle quality flags before any acquisition decision.",
+    ])[:3]
+    return status, reasons[:3], risks
+
+
+def render_committee_decision(summary: dict[str, float], risk_warnings: list[str]) -> None:
+    status, reasons, risks = committee_decision(summary, risk_warnings)
+    if status == "Recommend":
+        st.success(f"**Decision status: {status}**")
+    elif status == "Review":
+        st.warning(f"**Decision status: {status}**")
+    else:
+        st.error(f"**Decision status: {status}**")
+
+    reason_col, risk_col = st.columns(2)
+    with reason_col:
+        st.markdown("**Reasons**")
+        for reason in reasons:
+            st.markdown(f"- {reason}")
+    with risk_col:
+        st.markdown("**Risks or validation points**")
+        for risk in risks:
+            st.markdown(f"- {risk}")
+
+
+def render_risk_confidence(metrics: dict[str, float], warnings: list[str]) -> None:
+    row1 = st.columns(3)
+    row1[0].metric("Model output coverage", fmt_pct(metrics["model_output_coverage"]))
+    row1[1].metric("Missing model outputs excluded", f"{metrics['missing_model_outputs_excluded']:,}")
+    row1[2].metric("Eligible vehicles with quality flags", fmt_pct(metrics["eligible_quality_share"]))
+
+    row2 = st.columns(4)
+    row2[0].metric("Selected vehicles with quality flags", fmt_pct(metrics["selected_quality_share"]))
+    row2[1].metric("Highest fuel concentration", fmt_pct(metrics["fuel_concentration"]))
+    row2[2].metric("Highest price band concentration", fmt_pct(metrics["price_band_concentration"]))
+    row2[3].metric("Cross-sell dependency ratio", fmt_pct(metrics["cross_sell_dependency"]))
+
+    for warning in warnings:
+        st.warning(warning)
+
+
 def strategy_interpretation(vehicle_preset: str, pricing_preset: str) -> str:
     if vehicle_preset == "Broad Market":
         priority = "volume and opportunity discovery"
     elif vehicle_preset == "Young Low-Mileage Core":
         priority = "portfolio cleanliness and resale simplicity"
-    elif vehicle_preset == "Efficient Engine Campaign":
-        priority = "campaign coherence"
+    elif vehicle_preset == "Mainstream Retail Campaign":
+        priority = "campaign coherence and easy-to-explain retail selection"
     elif vehicle_preset == "Higher-Ticket Margin":
         priority = "unit margin with capital concentration"
     else:
@@ -991,7 +1139,11 @@ def render_kpis(summary: dict[str, float], budget_params: dict[str, Any]) -> Non
 
     row3 = st.columns(4)
     row3[0].metric("Cross-sell and loyalty income", fmt_eur(summary["cross_sell_income"]))
-    row3[1].metric("Average top-price probability", fmt_pct(summary["avg_top_price_probability"]))
+    row3[1].metric(
+        "Average commercial attractiveness score",
+        fmt_pct(summary["avg_top_price_probability"]),
+        help="This score comes from the upstream classification model field `top_price_probability`.",
+    )
     row3[2].metric("Average expected discount %", fmt_pct(summary["avg_expected_discount_pct"]))
     row3[3].metric("Average profit per vehicle", fmt_eur(summary["avg_expected_profit_per_vehicle"]))
 
@@ -1014,15 +1166,18 @@ def strategy_overview_markdown(
 - Mileage range: {vehicle_params["mileage_range"][0]:,.0f} to {vehicle_params["mileage_range"][1]:,.0f} km
 - Fuel types: {", ".join(vehicle_params["fuel_types"]) if vehicle_params["fuel_types"] else "None selected"}
 - Purchase price range: {fmt_eur(vehicle_params["price_range"][0])} to {fmt_eur(vehicle_params["price_range"][1])}
-- Minimum top-price probability: {fmt_pct(vehicle_params["min_top_price_probability"])}
+- Minimum commercial attractiveness score: {fmt_pct(vehicle_params["min_top_price_probability"])}
 - Minimum expected discount: {fmt_pct(vehicle_params["min_expected_discount_pct"])}
 
 **Commercial strategy**
 - Resale haircut: {fmt_pct(pricing_params["resale_haircut"])}
 - Financing take-up: {fmt_pct(pricing_params["financing_take_up_rate"])}
-- Customer APR: {fmt_pct(metadata["effective_customer_apr"])}
-- APR discounts: insurance {fmt_pct(pricing_params["insurance_apr_discount"])}, fuel card {fmt_pct(pricing_params["fuel_card_apr_discount"])}, payroll transfer {fmt_pct(pricing_params["payroll_apr_discount"])}
-- Attach rates: insurance {fmt_pct(pricing_params["insurance_attach_rate"])}, fuel card {fmt_pct(pricing_params["fuel_card_attach_rate"])}, payroll transfer {fmt_pct(pricing_params["payroll_attach_rate"])}
+- Expected effective APR after weighted cross-sell discounts: {fmt_pct(metadata["effective_customer_apr"])}
+- Expected weighted APR discount: {fmt_pct(metadata["expected_total_apr_discount"])}
+- Product APR discounts: insurance {fmt_pct(pricing_params["insurance_apr_discount"])}, fuel card {fmt_pct(pricing_params["fuel_card_apr_discount"])}, payroll transfer {fmt_pct(pricing_params["payroll_apr_discount"])}
+- Insurance attach rate: {fmt_pct(pricing_params["insurance_attach_rate"])} base -> {fmt_pct(metadata["adjusted_insurance_attach_rate"])} expected after discount effect
+- Fuel card attach rate: {fmt_pct(pricing_params["fuel_card_attach_rate"])} base -> {fmt_pct(metadata["adjusted_fuel_card_attach_rate"])} expected after discount effect
+- Payroll transfer attach rate: {fmt_pct(pricing_params["payroll_attach_rate"])} base -> {fmt_pct(metadata["adjusted_payroll_attach_rate"])} expected after discount effect
 
 {strategy_interpretation(vehicle_preset, pricing_preset)}
 """
@@ -1032,22 +1187,24 @@ def component_chart(summary: dict[str, float]) -> None:
     components = pd.DataFrame(
         {
             "Component": [
-                "Vehicle margin",
+                "Gross resale spread",
+                "Reconditioning cost",
+                "Transaction cost",
                 "Financing margin",
                 "Insurance income",
                 "Fuel card income",
                 "Payroll income",
                 "Inventory funding cost",
-                "Reconditioning and transaction costs",
             ],
             "Amount": [
-                summary["vehicle_margin"],
+                summary["gross_resale_spread"],
+                -summary["reconditioning_cost"],
+                -summary["transaction_cost"],
                 summary["finance_margin"],
                 summary["insurance_income"],
                 summary["fuel_card_income"],
                 summary["payroll_income"],
                 -summary["inventory_funding_cost"],
-                -summary["reconditioning_transaction_cost"],
             ],
         }
     )
@@ -1081,7 +1238,8 @@ def selected_table(selected: pd.DataFrame) -> pd.DataFrame:
         "power_outlier_iqr",
         "logical_issue",
     ]
-    return selected[[column for column in columns if column in selected.columns]].copy()
+    table = selected[[column for column in columns if column in selected.columns]].copy()
+    return table.rename(columns={"top_price_probability": "commercial_attractiveness_score"})
 
 
 def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
@@ -1108,9 +1266,17 @@ def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
             "expected_total_profit",
             "expected_roi",
         ],
-        title="Opportunity map: expected discount vs top-price probability",
+        title="Opportunity map: expected discount vs commercial attractiveness score",
+        labels={
+            "top_price_probability": "Commercial attractiveness score",
+            "expected_discount_pct": "Expected discount %",
+            "actual_price_eur": "Actual price EUR",
+            "expected_price_eur": "Expected price EUR",
+            "expected_total_profit": "Expected total profit",
+            "expected_roi": "Expected ROI",
+        },
     )
-    fig.update_layout(xaxis_title="Expected discount %", yaxis_title="Top-price probability")
+    fig.update_layout(xaxis_title="Expected discount %", yaxis_title="Commercial attractiveness score")
     fig.update_xaxes(tickformat=".0%")
     fig.update_yaxes(tickformat=".0%")
     st.plotly_chart(fig, use_container_width=True)
@@ -1168,6 +1334,7 @@ Top 10 selected candidates:
 {top_candidates}
 
 The memo must explain the strategy that produced the portfolio, not simply summarize selected cars.
+Use "commercial attractiveness score" when referring to the classification model signal from `top_price_probability`.
 Include this exact warning:
 "This is a simulated decision-support tool. It is not a final acquisition, credit, compliance, or risk approval."
 
@@ -1224,6 +1391,8 @@ def main() -> None:
     selected_with_actions = eligible_with_actions.loc[eligible_with_actions["selected"]].copy()
     summary = summarize_portfolio(selected_with_actions, budget_params)
     warnings = portfolio_warnings(enriched, eligible, selected_with_actions, summary, budget_params)
+    risk_metrics = risk_confidence_metrics(enriched, eligible, selected_with_actions, counts, summary, budget_params)
+    risk_warnings = risk_confidence_warnings(risk_metrics)
     overview = strategy_overview_markdown(
         vehicle_preset,
         pricing_preset,
@@ -1245,7 +1414,7 @@ def main() -> None:
             "business value through resale margin, financing margin and customer relationship value?"
         )
         st.info(
-            "Regression predicts expected market price. Classification predicts top-price attractiveness. "
+            "Regression predicts expected market price. Classification predicts commercial attractiveness. "
             "Streamlit combines model outputs with business assumptions. This is decision support, not an automatic "
             "acquisition, credit, compliance, or risk approval."
         )
@@ -1258,12 +1427,18 @@ def main() -> None:
         st.subheader("Executive KPIs")
         render_kpis(summary, budget_params)
 
+        st.subheader("Committee Decision")
+        render_committee_decision(summary, risk_warnings)
+
         st.subheader("Profit Component Chart")
         component_chart(summary)
 
+        st.subheader("Risk & Confidence")
+        render_risk_confidence(risk_metrics, risk_warnings)
+
         st.subheader("Current Recommendation")
         st.markdown(deterministic_recommendation(summary, warnings))
-        for warning in warnings:
+        for warning in [item for item in warnings if item not in risk_warnings]:
             st.warning(warning)
 
         st.subheader("Gemini Committee Memo")
@@ -1274,7 +1449,7 @@ def main() -> None:
                 overview,
                 summary,
                 pricing_params,
-                warnings,
+                warnings + risk_warnings,
                 selected_with_actions,
             )
             st.markdown(call_gemini(prompt))
@@ -1332,7 +1507,7 @@ def main() -> None:
         st.subheader("Business Notes")
         st.markdown(
             """
-- The selected portfolio is the result of the current strategy and assumptions.
+- The selected portfolio under the current mandate is the result of the current strategy and assumptions.
 - Changing filters changes the investment mandate.
 - Changing pricing and cross-sell assumptions changes the monetization strategy.
 - The model provides decision signals; the business strategy defines the portfolio.
