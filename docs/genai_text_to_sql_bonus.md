@@ -1,5 +1,7 @@
 # GenAI Text-to-SQL Bonus
 
+This document describes optional bonus material. It is not part of the mandatory scraping, preprocessing, BigQuery, SQL, regression, classification, or BI contract run path.
+
 ## Purpose
 
 This bonus adds a professional text-to-SQL MVP to the Streamlit BI dashboard. It lets students ask natural-language business questions and see how a governed BI data product can be queried through a GenAI layer without making the LLM the system of record.

@@ -1,116 +1,105 @@
-﻿# Head Of Data 101 Baseline Repo
+# Head Of Data 101 Baseline Repo
 
-This repository is the **day-0 baseline** for a professional end-to-end data product workflow.
-It is intentionally incomplete and designed for students to extend.
+This repository is the **official teaching baseline** for Head Of Data 101.
+It is a simple reference implementation of the end-to-end course pipeline: intentionally readable, notebook-first, and complete enough for students to revisit the full flow after class.
+
+It is **not production-grade** and it is not meant to hide complexity behind packages, orchestration, or helper layers. The goal is to keep the course data product coherent and easy to inspect.
+
+## Business Case
 
 The course roleplay is a data unit inside a retail / consumer bank evaluating used-vehicle acquisition opportunities for resale and financing portfolios.
 
+The baseline supports a committee-style decision process:
+
+- actual listing price comes from the scraped marketplace data
+- regression estimates `expected_price`
+- classification estimates the external `top_price` signal/probability
+- BI combines actual price, expected-price gap, top-price probability, and business assumptions
+- Streamlit provides the final decision-support demo
+
+The model does not decide the strategy. It helps the committee compare strategies with data.
+
 ## What This Repo Covers
 
-The baseline supports the full delivery chain:
+The mandatory baseline pipeline covers:
 
-1. Data acquisition (web scraping)
+1. Data acquisition through scraping
 2. Data preprocessing and quality checks
-3. Analytical warehouse modeling in BigQuery
-4. SQL dataset definitions for ML and BI consumption
-5. Regression to estimate expected price
-6. Classification to estimate top-price probability
-7. BI-ready outputs for decision support
+3. BigQuery warehouse tables
+4. SQL analytical views for ML and BI
+5. Regression expected-price model
+6. Classification top-price model
+7. BI-ready decision-support view
 
-## What Students Must Improve
+The Streamlit dashboard is optional for execution, but recommended as the final live demo once the warehouse and model output tables exist.
 
-Students are expected to evolve this baseline into a stronger product by improving:
-
-- model performance and validation rigor
-- BI layer and dashboard storytelling
-- business insights and recommendation logic
-- technical and decision documentation
-
-This repository is **not** the finished product.
-
-## Repository Contract
-
-- Keep the repo simple and readable for teaching.
-- Keep notebooks as the main learning surface.
-- Use one single final notebook set (no class/full split in this repo).
-- Preserve the narrative:
-  - regression predicts `expected_price`
-  - classification predicts `top_price`
-  - BI combines actual price, expected-price gap, and top-price outputs
-
-## Recommended Run Path
+## Mandatory Run Path
 
 Use [docs/RUN_ORDER.md](docs/RUN_ORDER.md) as the operational sequence.
 
-Current final notebook target path:
+Main pipeline notebooks:
 
-- `notebooks/01_scraping_audi_a3_germany.ipynb`
-- `notebooks/02_preprocessing_audi_a3_germany.ipynb`
-- `notebooks/03_sqlqueries_audi_a3_germany.ipynb`
-- `notebooks/04_regression_audi_a3_germany.ipynb`
-- `notebooks/05_classification_audi_a3_germany.ipynb`
+1. `notebooks/01_scraping_audi_a3_germany.ipynb`
+2. `notebooks/02_preprocessing_audi_a3_germany.ipynb`
+3. `notebooks/03_sqlqueries_audi_a3_germany.ipynb`
+4. `notebooks/04_regression_audi_a3_germany.ipynb`
+5. `notebooks/05_classification_audi_a3_germany.ipynb`
 
-## Session 03 Support Notebook
+These notebooks are the single final notebook set for the baseline. There is no separate class/full notebook split.
 
-For Session 03, the repo also includes a complementary exploratory notebook:
+## Optional Classroom Labs
 
-- `notebooks/01b_raw_data_eda_before_preprocessing_audi_a3_germany.ipynb`
+Optional notebooks are clearly separated from the mandatory pipeline:
 
-This notebook is intentionally **outside the final product pipeline**. It is a classroom support notebook used **before** preprocessing to inspect the raw scrape, understand anomalies, discuss duplicate behavior, and justify later preprocessing decisions. It does **not** save cleaned outputs and does **not** replace the production preprocessing notebook.
+- `notebooks/01b_raw_data_eda_before_preprocessing_audi_a3_germany.ipynb`:
+  Session 03 support notebook for raw scrape inspection before preprocessing. It does not save cleaned outputs or replace Notebook 02.
 
-## Session 06 Regression Challenge Lab
+- `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`:
+  Session 06 regression lab that runs from processed CSV files without BigQuery. It does not replace Notebook 04.
 
-For Session 06, the repo also includes a classroom regression lab:
-
-- `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`
-
-This classroom lab is designed as a 3-hour live session. It intentionally prioritizes interpretation, model reasoning, and business hand-off over full implementation from scratch.
-
-It runs from processed CSV files and does **not** require BigQuery access. The lab first looks for a preferred full Session 06 sample CSV in `data/processed/`, then falls back to the repo-visible sample in `data/sample/processed/`, and finally searches for any processed CSV with the required regression columns.
-
-Advanced regression models are included only as an optional extension, not as required core class work.
-
-This lab does **not** replace the production baseline notebook `notebooks/04_regression_audi_a3_germany.ipynb`.
-
-## Session 07 Classification Challenge Lab
-
-For Session 07, the repo also includes a classroom classification lab:
-
-- `notebooks/05b_classification_challenge_lab_audi_a3_germany.ipynb`
-
-This classroom lab is designed as a 3-hour live session. It intentionally prioritizes interpretation, model reasoning, threshold policy, and business hand-off over full implementation from scratch.
-
-It runs from processed CSV files and does not require BigQuery access. Advanced models and probability calibration are optional extensions, not required core class work.
-
-It does not replace the production baseline notebook `notebooks/05_classification_audi_a3_germany.ipynb`.
+- `notebooks/05b_classification_challenge_lab_audi_a3_germany.ipynb`:
+  Session 07 classification lab that runs from processed CSV files without BigQuery writes. It does not replace Notebook 05.
 
 ## SQL Assets
 
-SQL is organized in ordered files under `sql/`:
+SQL is ordered explicitly under `sql/` for classroom execution:
 
-- `00_create_dataset.sql`
-- `01_create_staging.sql`
-- `02_build_dimensions.sql`
-- `03_build_fact.sql`
-- `04_vw_regression_dataset.sql`
-- `05_vw_classification_dataset.sql`
-- `06_vw_bi_dashboard.sql`
+1. `00_create_dataset.sql`
+2. `01_create_staging.sql`
+3. `02_build_dimensions.sql`
+4. `03_build_fact.sql`
+5. `04_vw_regression_dataset.sql`
+6. `05_vw_classification_dataset.sql`
+7. `06_vw_bi_dashboard.sql`
 
-## Environment
+The SQL folder defines the BigQuery dataset, staging table, dimensions, fact table, ML-facing views, prediction table shells, and BI dashboard view. Preserve these object names because notebooks and BI depend on them.
 
-Install minimum requirements from:
+## Docs Folder
 
-- `requirements_min.in`
+The `docs/` folder contains student-facing reference material:
 
-Project-level defaults live in:
+- [RUN_ORDER.md](docs/RUN_ORDER.md): mandatory and optional execution sequence
+- [DATA_CONTRACT.md](docs/DATA_CONTRACT.md): warehouse, ML, prediction, and BI contracts
+- [PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md): business framing for the course case
+- [genai_text_to_sql_bonus.md](docs/genai_text_to_sql_bonus.md): optional Gemini text-to-SQL bonus
+- images used by course documentation
 
-- `config/project_config.yaml`
+## BI / Streamlit
 
-## Optional Gemini Configuration
+The Streamlit app in `bi/` is the final decision-support layer. It reads the governed BigQuery view `vw_bi_dashboard`, combines model signals with editable business assumptions, and helps compare portfolio strategies.
 
-Gemini features are optional. The Streamlit dashboard uses Gemini for committee memo generation and the GenAI SQL assistant only when the `google-genai` package is installed and an API key is available.
+It is not an approval engine and it does not replace committee judgment.
 
-Configure the key locally in PowerShell with one of:
+See [bi/README.md](bi/README.md) for dashboard-specific setup and demo notes.
+
+## Optional Gemini Functionality
+
+Gemini features are optional. The Streamlit dashboard can use Gemini for committee memo generation and the GenAI SQL assistant when:
+
+- `google-genai` is installed
+- `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set in the process environment
+
+Configure a key locally in PowerShell with one of:
 
 ```powershell
 $env:GEMINI_API_KEY="your_api_key_here"
@@ -122,4 +111,41 @@ or:
 $env:GOOGLE_API_KEY="your_api_key_here"
 ```
 
-`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If neither environment variable is set, the app falls back to deterministic/default behavior. Gemini credentials are not read from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or committed credential files.
+`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If no key is set, the dashboard keeps working with deterministic/default behavior. Gemini credentials are not read from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or committed credential files.
+
+## Installation
+
+Create and activate a Python environment, then install the minimal course dependencies:
+
+```bash
+pip install -r requirements_min.in
+```
+
+For BigQuery-backed notebooks and Streamlit, authenticate with Google Cloud in your local environment:
+
+```bash
+gcloud auth application-default login
+```
+
+Project defaults live in:
+
+- `config/project_config.yaml`
+
+## Run The Baseline
+
+1. Review `config/project_config.yaml`.
+2. Run the five mandatory notebooks in order.
+3. Execute the SQL files in the order shown in [docs/RUN_ORDER.md](docs/RUN_ORDER.md), including loading the processed CSV into `stg_listings_clean`.
+4. Confirm Notebook 04 writes `fact_expected_price_predictions`.
+5. Confirm Notebook 05 writes `fact_top_price_predictions`.
+6. Optionally run the Streamlit decision-support dashboard:
+
+```bash
+streamlit run bi/streamlit_app.py
+```
+
+## What To Expect
+
+Expect a readable teaching baseline that preserves the full course flow and the BI-ready data contract.
+
+Do not expect production orchestration, CI/CD, Docker, package structure, advanced MLOps, or a hardened cloud deployment. Those are valid extensions, but they are intentionally outside this baseline repository.

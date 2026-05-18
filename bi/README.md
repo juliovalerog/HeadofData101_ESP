@@ -4,7 +4,9 @@
 
 This dashboard is the final business decision layer for the course. It turns upstream model outputs into an executive investment simulator for a consumer finance business evaluating used-vehicle acquisition opportunities.
 
-The dashboard is designed for an investment committee, portfolio committee, or vehicle financing unit. It is not a technical notebook and it is not an automatic approval tool.
+The dashboard is optional for running the baseline, but recommended as the final decision-support demo after the warehouse and model output tables are populated.
+
+The dashboard is designed for an investment committee, portfolio committee, or vehicle financing unit. It is not a technical notebook, not a production approval engine, and not an automatic acquisition decision tool.
 
 ## Business Question
 
@@ -15,6 +17,8 @@ With a fixed investment budget, which vehicle portfolio should the business acqu
 Primary source:
 
 - BigQuery view: `vw_bi_dashboard`
+
+The default app path requires BigQuery access. It does not use a bundled mock dataset.
 
 The app reads `gcp_project_id` and `bq_dataset` from:
 
@@ -87,7 +91,7 @@ The app has three tabs:
 
 1. `Committee Dashboard`
 2. `Strategy & Portfolio Builder`
-3. `Ask the Data — GenAI SQL Assistant`
+3. `Ask the Data - GenAI SQL Assistant`
 
 The first tab is the executive decision screen. The second tab is the interactive working screen for strategy tuning and portfolio construction. The third tab is a governed text-to-SQL assistant over the BI dashboard view.
 

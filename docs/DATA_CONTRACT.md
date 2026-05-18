@@ -89,6 +89,12 @@ These defaults can be replaced using `config/project_config.yaml` values.
 - Key columns:
   - `listing_id`, `model_name`, `predicted_proba`, `predicted_label`, `threshold_used`
 
+### `model_evaluation_summary`
+
+- Grain: one row per evaluated classification model run
+- Role: reporting table written by Notebook 05 for model comparison
+- Downstream use: optional reporting and classroom discussion; not required by `vw_bi_dashboard`
+
 ## BI-Facing Output
 
 ### `vw_bi_dashboard`
