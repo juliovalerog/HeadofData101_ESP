@@ -1,5 +1,5 @@
--- Regression dataset view.
--- Target variable for regression is actual price (`actual_price_eur`).
+-- Vista del conjunto de datos de regresión.
+-- La variable objetivo de la regresión es el precio real (`actual_price_eur`).
 
 CREATE OR REPLACE VIEW `albertheadofdata101.autoscout_audi_a3_germany.vw_regression_dataset` AS
 SELECT

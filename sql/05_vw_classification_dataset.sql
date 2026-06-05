@@ -1,5 +1,5 @@
--- Classification dataset view.
--- Target variable is `top_price` derived from external price label semantics.
+-- Vista del conjunto de datos de clasificación.
+-- La variable objetivo es `top_price` derivada de la semántica de etiquetas de precios externas.
 
 CREATE OR REPLACE VIEW `albertheadofdata101.autoscout_audi_a3_germany.vw_classification_dataset` AS
 SELECT

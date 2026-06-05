@@ -21,11 +21,11 @@ def gemini_available() -> bool:
 
 def gemini_unavailable_message() -> str | None:
     if genai is None:
-        return "Gemini is unavailable because the `google-genai` package is not installed."
+        return "Gemini no está disponible porque el paquete `google-genai` no está instalado."
     if not resolved_gemini_api_key():
         return (
-            "Gemini is optional and no API key is configured. Set `GEMINI_API_KEY` or `GOOGLE_API_KEY` "
-            "to enable AI output."
+            "Gemini es opcional y no hay ninguna clave API configurada. Establecer `GEMINI_API_KEY` o `GOOGLE_API_KEY` "
+            "para habilitar la salida de IA."
         )
     return None
 
@@ -40,13 +40,13 @@ def generate_gemini_content(prompt: str) -> tuple[str | None, str | None]:
         response = client.models.generate_content(model=DEFAULT_GEMINI_MODEL, contents=prompt)
     except Exception as exc:
         message = str(exc).lower()
-        if "api key" in message or "unauthenticated" in message or "invalid" in message:
-            return None, "Gemini rejected the configured API key. Check `GEMINI_API_KEY` or `GOOGLE_API_KEY`."
+        if "clave API" in message or "unauthenticated" in message or "invalid" in message:
+            return None, "Gemini rechazó la clave API configurada. Marque `GEMINI_API_KEY` o `GOOGLE_API_KEY`."
         if "permission" in message or "denied" in message or "forbidden" in message:
-            return None, "Gemini permissions were denied for the configured API key or project."
-        return None, "Gemini request failed. Check network access, API availability, and the configured key."
+            return None, "Se denegaron los permisos Gemini para la clave o proyecto API configurado."
+        return None, "Gemini falló la solicitud. Verifique el acceso a la red, la disponibilidad de API y la clave configurada."
 
     text = getattr(response, "text", None)
     if not text:
-        return None, "Gemini returned an empty response."
+        return None, "Gemini devolvió una respuesta vacía."
     return str(text), None

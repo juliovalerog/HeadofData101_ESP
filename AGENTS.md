@@ -1,30 +1,30 @@
-﻿# AGENTS Rules For This Repository
+# Reglas AGENTS Para Este Repositorio
 
-## Scope
+## Alcance
 
-These rules apply to AI-assisted edits in this teaching repository.
+Estas reglas aplican a ediciones asistidas por IA en este repositorio docente.
 
-## Core Rules
+## Reglas Principales
 
-- Do not overengineer the codebase.
-- Keep notebooks simple, readable, and educational.
-- Keep notebooks as the main teaching interface.
-- Preserve BI-ready contracts and output table/view names.
-- Preserve one single final notebook set only.
-- Do not reintroduce class/full notebook duplication.
+- No sobrediseñar el código.
+- Mantener los notebooks simples, legibles y educativos.
+- Mantener los notebooks como la interfaz principal de enseñanza.
+- Preservar los contratos BI-ready y los nombres de tablas/vistas de salida.
+- Preservar un único set final de notebooks.
+- No reintroducir duplicación de notebooks de clase/completos.
 
-## Narrative Guardrails
+## Guardarraíles Narrativos
 
-- Keep the intended storyline:
-  - regression predicts `expected_price`
-  - classification predicts `top_price`
-  - BI combines actual price, expected-price gap, and top-price outputs
-- Do not drift from the `expected_price` + `top_price` narrative.
-- Do not reintroduce the old bargain/classification-from-prediction storyline.
+- Mantener la historia prevista:
+  - la regresión predice `expected_price`
+  - la clasificación predice `top_price`
+  - BI combina precio real, brecha frente a `expected_price` y salidas de `top_price`
+- No desviarse de la narrativa `expected_price` + `top_price`.
+- No reintroducir la antigua historia de bargain/clasificación desde predicción.
 
-## Refactor Boundaries
+## Límites De Refactor
 
-- Prefer minimal, teachable changes over architectural redesign.
-- Avoid hidden helpers, complex packaging, or unnecessary abstractions.
-- Keep documentation in English.
-- Keep SQL assets ordered and explicit for classroom use.
+- Preferir cambios mínimos y enseñables frente a rediseños arquitectónicos.
+- Evitar helpers ocultos, packaging complejo o abstracciones innecesarias.
+- Mantener la documentación en castellano.
+- Mantener los activos SQL ordenados y explícitos para uso en clase.

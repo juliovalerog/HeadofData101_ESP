@@ -1,43 +1,43 @@
-# Head Of Data 101 Baseline Repo
+# Head Of Data 101 - Repositorio Base En Español
 
-This repository is the **official teaching baseline** for Head Of Data 101.
-It is a simple reference implementation of the end-to-end course pipeline: intentionally readable, notebook-first, and complete enough for students to revisit the full flow after class.
+Este repositorio es la **réplica en castellano** del baseline docente de Head Of Data 101.
+Mantiene la misma base de datos, las mismas claves de configuración, los mismos datos y los mismos contratos BI que el repositorio original.
 
-It is **not production-grade** and it is not meant to hide complexity behind packages, orchestration, or helper layers. The goal is to keep the course data product coherent and easy to inspect.
+El objetivo es que los alumnos puedan recorrer el flujo completo de forma clara, notebook-first y sin capas innecesarias de arquitectura.
 
-## Business Case
+No es un proyecto de producción. Está diseñado para enseñar el ciclo completo de un producto de datos de forma legible y revisable.
 
-The course roleplay is a data unit inside a retail / consumer bank evaluating used-vehicle acquisition opportunities for resale and financing portfolios.
+## Caso De Negocio
 
-The baseline supports a committee-style decision process:
+El curso simula una unidad de datos dentro de un banco retail / consumer finance que evalúa oportunidades de adquisición de vehículos usados para reventa y financiación.
 
-- actual listing price comes from the scraped marketplace data
-- regression estimates `expected_price`
-- classification estimates the external `top_price` signal/probability
-- BI combines actual price, expected-price gap, top-price probability, and business assumptions
-- Streamlit provides the final decision-support demo
+El baseline mantiene esta narrativa:
 
-The model does not decide the strategy. It helps the committee compare strategies with data.
+- el precio real viene de los datos scrapeados del marketplace
+- la regresión estima `expected_price`
+- la clasificación estima la señal/probabilidad externa `top_price`
+- BI combina precio real, brecha frente a `expected_price`, probabilidad `top_price` y supuestos de negocio
+- Streamlit ofrece la demo final de soporte a la decisión
 
-## What This Repo Covers
+El modelo no decide la estrategia. Ayuda al comité a comparar estrategias con datos.
 
-The mandatory baseline pipeline covers:
+## Qué Cubre Este Repo
 
-1. Data acquisition through scraping
-2. Data preprocessing and quality checks
-3. BigQuery warehouse tables
-4. SQL analytical views for ML and BI
-5. Regression expected-price model
-6. Classification top-price model
-7. BI-ready decision-support view
+El pipeline obligatorio cubre:
 
-The Streamlit dashboard is optional for execution, but recommended as the final live demo once the warehouse and model output tables exist.
+1. adquisición de datos mediante scraping
+2. preprocesamiento y controles de calidad
+3. tablas de warehouse en BigQuery
+4. vistas SQL analíticas para ML y BI
+5. modelo de regresión para `expected_price`
+6. modelo de clasificación para `top_price`
+7. vista BI-ready de soporte a la decisión
 
-## Mandatory Run Path
+El dashboard de Streamlit es opcional para ejecutar el pipeline, pero recomendado como demo final cuando el warehouse y las tablas de predicción ya existen.
 
-Use [docs/RUN_ORDER.md](docs/RUN_ORDER.md) as the operational sequence.
+## Orden Obligatorio De Ejecución
 
-Main pipeline notebooks:
+Ejecuta los notebooks principales en este orden:
 
 1. `notebooks/01_scraping_audi_a3_germany.ipynb`
 2. `notebooks/02_preprocessing_audi_a3_germany.ipynb`
@@ -45,24 +45,24 @@ Main pipeline notebooks:
 4. `notebooks/04_regression_audi_a3_germany.ipynb`
 5. `notebooks/05_classification_audi_a3_germany.ipynb`
 
-These notebooks are the single final notebook set for the baseline. There is no separate class/full notebook split.
+Estos notebooks son el único set final obligatorio del baseline. No hay separación entre versión de clase y versión completa.
 
-## Optional Classroom Labs
+## Laboratorios Opcionales
 
-Optional notebooks are clearly separated from the mandatory pipeline:
+Los notebooks opcionales están separados del pipeline obligatorio:
 
 - `notebooks/01b_raw_data_eda_before_preprocessing_audi_a3_germany.ipynb`:
-  Session 03 support notebook for raw scrape inspection before preprocessing. It does not save cleaned outputs or replace Notebook 02.
+  apoyo de Session 03 para inspeccionar datos raw antes del preprocesamiento. No guarda salidas limpias ni sustituye al Notebook 02.
 
 - `notebooks/04b_regression_challenge_lab_audi_a3_germany.ipynb`:
-  Session 06 regression lab that runs from processed CSV files without BigQuery. It does not replace Notebook 04.
+  laboratorio de regresión de Session 06 desde CSV procesados, sin BigQuery. No sustituye al Notebook 04.
 
 - `notebooks/05b_classification_challenge_lab_audi_a3_germany.ipynb`:
-  Session 07 classification lab that runs from processed CSV files without BigQuery writes. It does not replace Notebook 05.
+  laboratorio de clasificación de Session 07 desde CSV procesados, sin escrituras en BigQuery. No sustituye al Notebook 05.
 
-## SQL Assets
+## Activos SQL
 
-SQL is ordered explicitly under `sql/` for classroom execution:
+SQL está ordenado explícitamente en `sql/` para ejecución en clase:
 
 1. `00_create_dataset.sql`
 2. `01_create_staging.sql`
@@ -72,80 +72,70 @@ SQL is ordered explicitly under `sql/` for classroom execution:
 6. `05_vw_classification_dataset.sql`
 7. `06_vw_bi_dashboard.sql`
 
-The SQL folder defines the BigQuery dataset, staging table, dimensions, fact table, ML-facing views, prediction table shells, and BI dashboard view. Preserve these object names because notebooks and BI depend on them.
-
-## Docs Folder
-
-The `docs/` folder contains student-facing reference material:
-
-- [RUN_ORDER.md](docs/RUN_ORDER.md): mandatory and optional execution sequence
-- [DATA_CONTRACT.md](docs/DATA_CONTRACT.md): warehouse, ML, prediction, and BI contracts
-- [PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md): business framing for the course case
-- [genai_text_to_sql_bonus.md](docs/genai_text_to_sql_bonus.md): optional Gemini text-to-SQL bonus
-- images used by course documentation
+La carpeta SQL define el dataset de BigQuery, staging, dimensiones, tabla de hechos, vistas para ML, tablas de predicción y vista de dashboard BI. Conserva estos nombres porque los notebooks y BI dependen de ellos.
 
 ## BI / Streamlit
 
-The Streamlit app in `bi/` is the final decision-support layer. It reads the governed BigQuery view `vw_bi_dashboard`, combines model signals with editable business assumptions, and helps compare portfolio strategies.
+La app de Streamlit en `bi/` es la capa final de soporte a la decisión. Lee la vista gobernada de BigQuery `vw_bi_dashboard`, combina señales de modelo con supuestos editables de negocio y ayuda a comparar estrategias de portfolio.
 
-It is not an approval engine and it does not replace committee judgment.
+No es un motor de aprobación y no sustituye el criterio del comité.
 
-See [bi/README.md](bi/README.md) for dashboard-specific setup and demo notes.
+Consulta `bi/README.md` para la configuración específica del dashboard y notas de demo.
 
-## Optional Gemini Functionality
+## Funcionalidad Opcional Con Gemini
 
-Gemini features are optional. The Streamlit dashboard can use Gemini for committee memo generation and the GenAI SQL assistant when:
+Las funciones de Gemini son opcionales. El dashboard de Streamlit puede usar Gemini para generar el memo de comité y el asistente GenAI SQL cuando:
 
-- `google-genai` is installed
-- `GEMINI_API_KEY` or `GOOGLE_API_KEY` is set in the process environment
+- `google-genai` está instalado
+- `GEMINI_API_KEY` o `GOOGLE_API_KEY` está definida en el entorno del proceso
 
-Configure a key locally in PowerShell with one of:
+Configura una clave localmente en PowerShell con una de estas opciones:
 
 ```powershell
 $env:GEMINI_API_KEY="your_api_key_here"
 ```
 
-or:
+o:
 
 ```powershell
 $env:GOOGLE_API_KEY="your_api_key_here"
 ```
 
-`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If no key is set, the dashboard keeps working with deterministic/default behavior. Gemini credentials are not read from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or committed credential files.
+`GEMINI_API_KEY` tiene prioridad sobre `GOOGLE_API_KEY`. Si no hay ninguna clave, el dashboard sigue funcionando con comportamiento determinista/default. Las credenciales de Gemini no se leen desde `.streamlit/secrets.toml`, secretos de Streamlit Cloud, `.env` ni archivos de credenciales versionados.
 
-## Installation
+## Instalación
 
-Create and activate a Python environment, then install the minimal course dependencies:
+Crea y activa un entorno Python, y después instala las dependencias mínimas del curso:
 
 ```bash
 pip install -r requirements_min.in
 ```
 
-For BigQuery-backed notebooks and Streamlit, authenticate with Google Cloud in your local environment:
+Para notebooks y Streamlit respaldados por BigQuery, autentícate con Google Cloud en tu entorno local:
 
 ```bash
 gcloud auth application-default login
 ```
 
-Project defaults live in:
+La configuración por defecto vive en:
 
 - `config/project_config.yaml`
 
-## Run The Baseline
+## Ejecutar El Baseline
 
-1. Review `config/project_config.yaml`.
-2. Run the five mandatory notebooks in order.
-3. Execute the SQL files in the order shown in [docs/RUN_ORDER.md](docs/RUN_ORDER.md), including loading the processed CSV into `stg_listings_clean`.
-4. Confirm Notebook 04 writes `fact_expected_price_predictions`.
-5. Confirm Notebook 05 writes `fact_top_price_predictions`.
-6. Optionally run the Streamlit decision-support dashboard:
+1. Revisa `config/project_config.yaml`.
+2. Ejecuta los cinco notebooks obligatorios en orden.
+3. Ejecuta los archivos SQL en el orden indicado arriba, incluyendo la carga del CSV procesado en `stg_listings_clean`.
+4. Confirma que el Notebook 04 escribe `fact_expected_price_predictions`.
+5. Confirma que el Notebook 05 escribe `fact_top_price_predictions`.
+6. Opcionalmente ejecuta el dashboard de soporte a la decisión:
 
 ```bash
 streamlit run bi/streamlit_app.py
 ```
 
-## What To Expect
+## Qué Esperar
 
-Expect a readable teaching baseline that preserves the full course flow and the BI-ready data contract.
+Espera un baseline docente legible que conserva el flujo completo del curso y el contrato de datos BI-ready.
 
-Do not expect production orchestration, CI/CD, Docker, package structure, advanced MLOps, or a hardened cloud deployment. Those are valid extensions, but they are intentionally outside this baseline repository.
+No esperes orquestación de producción, CI/CD, Docker, estructura de paquete, MLOps avanzado ni despliegue cloud endurecido. Son extensiones válidas, pero quedan fuera de este repositorio base.

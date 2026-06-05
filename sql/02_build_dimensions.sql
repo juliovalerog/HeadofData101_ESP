@@ -1,4 +1,4 @@
--- Build dimensions from staging.
+-- Construya dimensiones a partir de la puesta en escena.
 
 CREATE OR REPLACE TABLE `albertheadofdata101.autoscout_audi_a3_germany.dim_model` AS
 WITH normalized AS (

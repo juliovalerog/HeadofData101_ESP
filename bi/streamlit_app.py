@@ -48,19 +48,19 @@ REQUIRED_COLUMNS = [
 ]
 
 VEHICLE_PRESETS = [
-    "Broad Market",
-    "Young Low-Mileage Core",
-    "Mainstream Retail Campaign",
-    "Higher-Ticket Margin",
-    "Conservative Risk",
+    "Mercado amplio",
+    "Núcleo joven con bajo kilometraje",
+    "Campaña retail generalista",
+    "Margen en vehículos de mayor precio",
+    "Riesgo conservador",
 ]
 
 PRICING_PRESETS = [
-    "Base Case",
-    "Aggressive Cross-Sell",
-    "Finance Margin Focus",
-    "Customer Loyalty Focus",
-    "Stress Case",
+    "Caso base",
+    "Venta cruzada agresiva",
+    "Foco en margen financiero",
+    "Foco en fidelización",
+    "Escenario de estrés",
 ]
 
 PERCENT_SLIDER_KEYS = {
@@ -96,47 +96,47 @@ MAX_BYTES_BILLED = env_megabytes("BQ_MAX_BYTES_BILLED_MB", 50) * 1024 * 1024
 ALLOWED_BI_VIEW_TEMPLATE = "`{project_id}.{dataset_id}.vw_bi_dashboard`"
 
 AI_EXAMPLE_PROMPTS = [
-    "Which listings should the committee review first?",
-    "Which fuel types concentrate the strongest price opportunities?",
-    "Where do expected-price gap and top-price probability agree?",
-    "Which opportunities are risky because of quality flags?",
-    "Summarize the decision_flag distribution.",
-    "Compare actual vs expected price by registration year.",
-    "Show cases where the model outputs are missing.",
+    "¿Qué listados debería revisar primero el comité?",
+    "¿Qué tipos de combustible concentran las mayores oportunidades de precios?",
+    "¿Dónde coinciden la brecha expected-price y la probabilidad top-price?",
+    "¿Qué oportunidades son riesgosas debido a las banderas de calidad?",
+    "Resuma la distribución decision_flag.",
+    "Compare el precio real con el esperado por año de registro.",
+    "Muestre casos en los que faltan los resultados del modelo.",
 ]
 
 DEMO_QUESTIONS = [
-    "Which listings should the committee review first?",
-    "Which fuel types concentrate the strongest price opportunities?",
-    "Where do regression and classification signals agree?",
-    "Which opportunities have quality or logical risk flags?",
-    "How many listings fall into each decision flag?",
+    "¿Qué listados debería revisar primero el comité?",
+    "¿Qué tipos de combustible concentran las mayores oportunidades de precios?",
+    "¿Dónde coinciden las señales de regresión y clasificación?",
+    "¿Qué oportunidades tienen indicadores de calidad o de riesgo lógico?",
+    "¿Cuántos listados caen en cada indicador de decisión?",
 ]
 
 DECISION_FLAG_MEANINGS = {
-    "high_priority_review": "below expected price and strong top-price signal",
-    "price_opportunity": "below expected price but the top-price signal is weaker or missing",
-    "top_price_signal": "positive classification signal, price gap not necessarily attractive",
-    "review_missing_model_outputs": "model outputs are missing and need review",
-    "standard_review": "no strong priority signal",
+    "high_priority_review": "Precio por debajo del esperado y fuerte señal top-price",
+    "price_opportunity": "por debajo del precio esperado pero la señal top-price es más débil o falta",
+    "top_price_signal": "señal de clasificación positiva, la diferencia de precios no es necesariamente atractiva",
+    "review_missing_model_outputs": "Faltan resultados del modelo y es necesario revisarlos.",
+    "standard_review": "no hay señal de prioridad fuerte",
 }
 
 BI_FIELD_MEANINGS = {
-    "actual_price_eur": "observed marketplace listing price",
-    "expected_price_eur": "regression model estimate of normal market price",
-    "expected_price_gap_eur": "actual price minus expected price; negative means below model-expected value",
-    "top_price_probability": "classification model probability associated with the external top-price signal",
-    "predicted_top_price": "binary model output for the top-price classification task",
-    "decision_flag": "business priority flag produced in the BI view",
-    "price_outlier_iqr": "IQR-based price quality and risk flag",
-    "mileage_outlier_iqr": "IQR-based mileage quality and risk flag",
-    "power_outlier_iqr": "IQR-based power quality and risk flag",
-    "logical_issue": "logical data quality or business rule issue flag",
+    "actual_price_eur": "precio de cotización observado en el mercado",
+    "expected_price_eur": "estimación del modelo de regresión del precio normal de mercado",
+    "expected_price_gap_eur": "precio real menos precio esperado; negativo significa por debajo del valor esperado por el modelo",
+    "top_price_probability": "probabilidad del modelo de clasificación asociada a la señal externa top-price",
+    "predicted_top_price": "Salida del modelo binario para la tarea de clasificación top-price.",
+    "decision_flag": "indicador de prioridad empresarial producido en la vista BI",
+    "price_outlier_iqr": "Marca de calidad/riesgo de precio basada en IQR",
+    "mileage_outlier_iqr": "Indicador de calidad/riesgo de kilometraje basado en IQR",
+    "power_outlier_iqr": "Indicador de riesgo y calidad de energía basado en IQR",
+    "logical_issue": "Marca de problema de reglas de negocio o calidad de datos lógicos",
 }
 
 
 st.set_page_config(
-    page_title="Vehicle Portfolio Investment Simulator",
+    page_title="Simulador De Inversión En Portfolio De Vehículos",
     layout="wide",
 )
 
@@ -173,7 +173,7 @@ def query_text(project_id: str, dataset_id: str) -> str:
     """
 
 
-@st.cache_data(ttl=900, show_spinner="Loading BI dashboard data from BigQuery...")
+@st.cache_data(ttl=900, show_spinner="Cargando datos del panel BI desde BigQuery...")
 def load_dashboard_data(project_id: str, dataset_id: str) -> tuple[pd.DataFrame | None, str | None]:
     try:
         client = bigquery.Client(project=project_id)
@@ -181,19 +181,19 @@ def load_dashboard_data(project_id: str, dataset_id: str) -> tuple[pd.DataFrame 
         return df, None
     except DefaultCredentialsError:
         return None, (
-            "BigQuery credentials are not configured. Authenticate with Google Cloud before running "
-            "the dashboard, for example with `gcloud auth application-default login`, or configure "
-            "the service account credentials used by your environment."
+            "Las credenciales de BigQuery no están configuradas. Autentícate con Google Cloud antes de ejecutar "
+            "el panel de control, por ejemplo con `gcloud auth application-default login`, o configurar "
+            "las credenciales de la cuenta de servicio utilizadas por su entorno."
         )
     except GoogleAPIError:
         return None, (
-            "BigQuery could not be reached or the configured project and dataset are unavailable. "
-            "Check the Google Cloud project, dataset, permissions, and upstream pipeline status."
+            "No se pudo alcanzar BigQuery o el proyecto configurado y el conjunto de datos no están disponibles. "
+            "Verifique el proyecto Google Cloud, el conjunto de datos, los permisos y el estado de la canalización ascendente."
         )
     except Exception:
         return None, (
-            "The dashboard could not load the BI view. Check credentials, network access, and the "
-            "configured BigQuery project and dataset."
+            "El panel no pudo cargar la vista BI. Verifique las credenciales, el acceso a la red y la "
+            "proyecto y conjunto de datos BigQuery configurados."
         )
 
 
@@ -227,7 +227,7 @@ def clean_dashboard_data(df: pd.DataFrame) -> pd.DataFrame:
     for column in ["price_outlier_iqr", "mileage_outlier_iqr", "power_outlier_iqr", "logical_issue"]:
         cleaned[column] = normalize_bool(cleaned[column])
 
-    cleaned["fuel_type"] = cleaned["fuel_type"].fillna("Unknown").astype(str)
+    cleaned["fuel_type"] = cleaned["fuel_type"].fillna("Desconocido").astype(str)
     cleaned["quality_issue"] = cleaned[
         ["price_outlier_iqr", "mileage_outlier_iqr", "power_outlier_iqr", "logical_issue"]
     ].any(axis=1)
@@ -267,7 +267,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
     q = lambda column, value: quantile(df, column, value)
 
     return {
-        "Broad Market": {
+        "Mercado amplio": {
             "age_range": (age_min, age_max),
             "mileage_range": (mileage_min, mileage_max),
             "power_range": (power_min, power_max),
@@ -281,7 +281,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
             "exclude_logical_issue": False,
             "expected_days_to_resale": 90,
         },
-        "Young Low-Mileage Core": {
+        "Núcleo joven con bajo kilometraje": {
             "age_range": (age_min, min(age_max, q("age_years", 0.55))),
             "mileage_range": (mileage_min, min(mileage_max, q("mileage_km", 0.55))),
             "power_range": (power_min, power_max),
@@ -295,7 +295,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
             "exclude_logical_issue": True,
             "expected_days_to_resale": 75,
         },
-        "Mainstream Retail Campaign": {
+        "Campaña retail generalista": {
             "age_range": (age_min, min(age_max, q("age_years", 0.75))),
             "mileage_range": (mileage_min, min(mileage_max, q("mileage_km", 0.70))),
             "power_range": (power_min, power_max),
@@ -309,7 +309,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
             "exclude_logical_issue": True,
             "expected_days_to_resale": 70,
         },
-        "Higher-Ticket Margin": {
+        "Margen en vehículos de mayor precio": {
             "age_range": (age_min, age_max),
             "mileage_range": (mileage_min, mileage_max),
             "power_range": (power_min, power_max),
@@ -323,7 +323,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
             "exclude_logical_issue": True,
             "expected_days_to_resale": 110,
         },
-        "Conservative Risk": {
+        "Riesgo conservador": {
             "age_range": (age_min, min(age_max, q("age_years", 0.50))),
             "mileage_range": (mileage_min, min(mileage_max, q("mileage_km", 0.50))),
             "power_range": (power_min, power_max),
@@ -342,7 +342,7 @@ def build_vehicle_preset_defaults(df: pd.DataFrame) -> dict[str, dict[str, Any]]
 
 def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
     return {
-        "Base Case": {
+        "Caso base": {
             "resale_haircut": 0.06,
             "reconditioning_cost": 850,
             "transaction_cost": 450,
@@ -366,7 +366,7 @@ def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
             "payroll_apr_discount": 0.003,
             "attach_rate_elasticity": 4.0,
         },
-        "Aggressive Cross-Sell": {
+        "Venta cruzada agresiva": {
             "resale_haircut": 0.06,
             "reconditioning_cost": 850,
             "transaction_cost": 450,
@@ -390,7 +390,7 @@ def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
             "payroll_apr_discount": 0.006,
             "attach_rate_elasticity": 5.5,
         },
-        "Finance Margin Focus": {
+        "Foco en margen financiero": {
             "resale_haircut": 0.055,
             "reconditioning_cost": 800,
             "transaction_cost": 450,
@@ -414,7 +414,7 @@ def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
             "payroll_apr_discount": 0.001,
             "attach_rate_elasticity": 2.0,
         },
-        "Customer Loyalty Focus": {
+        "Foco en fidelización": {
             "resale_haircut": 0.065,
             "reconditioning_cost": 900,
             "transaction_cost": 450,
@@ -438,7 +438,7 @@ def pricing_preset_defaults() -> dict[str, dict[str, Any]]:
             "payroll_apr_discount": 0.007,
             "attach_rate_elasticity": 5.0,
         },
-        "Stress Case": {
+        "Escenario de estrés": {
             "resale_haircut": 0.12,
             "reconditioning_cost": 1000,
             "transaction_cost": 500,
@@ -505,27 +505,27 @@ def percent_slider(label: str, key: str, min_value: float, max_value: float, ste
 
 
 def render_sidebar(df: pd.DataFrame) -> tuple[str, str, dict[str, Any], dict[str, Any], dict[str, Any], bool]:
-    st.sidebar.title("Strategy Configuration")
-    vehicle_preset = st.sidebar.selectbox("Vehicle Filter Strategy", VEHICLE_PRESETS)
-    pricing_preset = st.sidebar.selectbox("Pricing and Cross-Sell Strategy", PRICING_PRESETS)
+    st.sidebar.title("Configuración de estrategia")
+    vehicle_preset = st.sidebar.selectbox("Estrategia de filtrado de vehículos", VEHICLE_PRESETS)
+    pricing_preset = st.sidebar.selectbox("Estrategia de precios y venta cruzada", PRICING_PRESETS)
 
     vehicle_defaults = build_vehicle_preset_defaults(df)
     pricing_defaults = pricing_preset_defaults()
     populate_defaults_if_needed(vehicle_preset, pricing_preset, vehicle_defaults, pricing_defaults)
 
-    if st.sidebar.button("Reset all assumptions"):
+    if st.sidebar.button("Restablecer todas las suposiciones"):
         reset_all_assumptions(vehicle_preset, pricing_preset, vehicle_defaults, pricing_defaults)
         st.rerun()
 
     st.sidebar.info(
-        "Strategy presets are business assumptions. They define the investment mandate and commercial campaign "
-        "logic. They do not change the underlying model outputs."
+        "Los ajustes preestablecidos de estrategia son suposiciones comerciales. Definen mandato de inversión y campaña comercial "
+        "lógica. No cambian los resultados del modelo subyacente."
     )
 
-    with st.sidebar.expander("Investment controls", expanded=True):
-        budget = st.number_input("Investment budget in EUR", min_value=0, step=50_000, key="budget_eur")
-        max_vehicles = st.number_input("Maximum number of vehicles", min_value=1, step=1, key="max_vehicles")
-        cash_buffer_pct = percent_slider("Minimum cash buffer %", "cash_buffer_pct", 0.0, 50.0, 1.0)
+    with st.sidebar.expander("Controles de inversión", expanded=True):
+        budget = st.number_input("Presupuesto de inversión en euros", min_value=0, step=50_000, key="budget_eur")
+        max_vehicles = st.number_input("Número máximo de vehículos", min_value=1, step=1, key="max_vehicles")
+        cash_buffer_pct = percent_slider("% mínimo de colchón de efectivo", "cash_buffer_pct", 0.0, 50.0, 1.0)
 
     age_min, age_max = numeric_bounds(df, "age_years")
     mileage_min, mileage_max = numeric_bounds(df, "mileage_km")
@@ -533,71 +533,71 @@ def render_sidebar(df: pd.DataFrame) -> tuple[str, str, dict[str, Any], dict[str
     price_min, price_max = numeric_bounds(df, "actual_price_eur")
     fuel_options = sorted(df["fuel_type"].dropna().astype(str).unique().tolist())
 
-    with st.sidebar.expander("Vehicle filters", expanded=True):
-        age_range = st.slider("Age range", age_min, age_max, key="vehicle_age_range")
-        mileage_range = st.slider("Mileage range", mileage_min, mileage_max, key="vehicle_mileage_range")
-        power_range = st.slider("Power range", power_min, power_max, key="vehicle_power_range")
-        price_range = st.slider("Purchase price range", price_min, price_max, key="vehicle_price_range")
-        fuel_types = st.multiselect("Fuel types", fuel_options, key="vehicle_fuel_types")
+    with st.sidebar.expander("Filtros de vehículos", expanded=True):
+        age_range = st.slider("rango de edad", age_min, age_max, key="vehicle_age_range")
+        mileage_range = st.slider("Rango de kilometraje", mileage_min, mileage_max, key="vehicle_mileage_range")
+        power_range = st.slider("Rango de potencia", power_min, power_max, key="vehicle_power_range")
+        price_range = st.slider("rango de precio de compra", price_min, price_max, key="vehicle_price_range")
+        fuel_types = st.multiselect("Tipos de combustible", fuel_options, key="vehicle_fuel_types")
         min_top_price_probability = percent_slider(
-            "Minimum commercial attractiveness score",
+            "Puntuación mínima de atractivo comercial",
             "vehicle_min_top_price_probability",
             0.0,
             100.0,
             1.0,
         )
-        st.caption("This score comes from the upstream classification model field `top_price_probability`.")
+        st.caption("Esta puntuación proviene del campo del modelo de clasificación ascendente `top_price_probability`.")
         min_expected_discount_pct = percent_slider(
-            "Minimum expected discount %",
+            "% de descuento mínimo esperado",
             "vehicle_min_expected_discount_pct",
             -50.0,
             50.0,
             1.0,
         )
-        exclude_price_outlier = st.checkbox("Exclude price outlier flag", key="vehicle_exclude_price_outlier")
-        exclude_mileage_outlier = st.checkbox("Exclude mileage outlier flag", key="vehicle_exclude_mileage_outlier")
-        exclude_power_outlier = st.checkbox("Exclude power outlier flag", key="vehicle_exclude_power_outlier")
-        exclude_logical_issue = st.checkbox("Exclude logical issue flag", key="vehicle_exclude_logical_issue")
+        exclude_price_outlier = st.checkbox("Excluir indicador de valor atípico de precio", key="vehicle_exclude_price_outlier")
+        exclude_mileage_outlier = st.checkbox("Excluir indicador de valor atípico de kilometraje", key="vehicle_exclude_mileage_outlier")
+        exclude_power_outlier = st.checkbox("Excluir indicador de valor atípico de potencia", key="vehicle_exclude_power_outlier")
+        exclude_logical_issue = st.checkbox("Excluir indicador de problema lógico", key="vehicle_exclude_logical_issue")
         allow_missing_model_outputs = st.checkbox(
-            "Allow missing model outputs",
+            "Permitir salidas de modelo faltantes",
             key="allow_missing_model_outputs",
-            help="Disabled by default because the portfolio should use both regression and classification signals.",
+            help="Deshabilitado de forma predeterminada porque la cartera debe utilizar señales tanto de regresión como de clasificación.",
         )
 
-    with st.sidebar.expander("Resale economics", expanded=False):
-        resale_haircut = percent_slider("Conservative resale haircut over expected price", "pricing_resale_haircut", 0.0, 40.0)
-        reconditioning_cost = st.number_input("Reconditioning cost per vehicle", min_value=0, step=50, key="pricing_reconditioning_cost")
-        transaction_cost = st.number_input("Transaction cost per vehicle", min_value=0, step=50, key="pricing_transaction_cost")
-        inventory_funding_cost_rate = percent_slider("Annual inventory funding cost rate", "pricing_inventory_funding_cost_rate", 0.0, 30.0)
-        expected_days_to_resale = st.number_input("Expected days to resale", min_value=1, max_value=365, step=5, key="vehicle_expected_days_to_resale")
+    with st.sidebar.expander("Economía de reventa", expanded=False):
+        resale_haircut = percent_slider("Recorte conservador de reventa sobre el precio esperado", "pricing_resale_haircut", 0.0, 40.0)
+        reconditioning_cost = st.number_input("Costo de reacondicionamiento por vehículo", min_value=0, step=50, key="pricing_reconditioning_cost")
+        transaction_cost = st.number_input("Costo de transacción por vehículo", min_value=0, step=50, key="pricing_transaction_cost")
+        inventory_funding_cost_rate = percent_slider("Tasa de costo de financiación de inventario anual", "pricing_inventory_funding_cost_rate", 0.0, 30.0)
+        expected_days_to_resale = st.number_input("Días esperados para revender", min_value=1, max_value=365, step=5, key="vehicle_expected_days_to_resale")
 
-    with st.sidebar.expander("Financing assumptions", expanded=False):
-        financed_amount_pct = percent_slider("Expected financed amount as % of resale price", "pricing_financed_amount_pct", 0.0, 100.0)
-        base_customer_apr = percent_slider("Base customer APR", "pricing_base_customer_apr", 0.0, 30.0)
-        funding_cost_rate = percent_slider("Funding cost rate", "pricing_funding_cost_rate", 0.0, 20.0)
-        credit_risk_cost_rate = percent_slider("Expected credit risk cost rate", "pricing_credit_risk_cost_rate", 0.0, 20.0)
-        loan_term_months = st.number_input("Average loan term in months", min_value=1, max_value=120, step=1, key="pricing_loan_term_months")
-        financing_take_up_rate = percent_slider("Financing take-up rate", "pricing_financing_take_up_rate", 0.0, 100.0)
-        min_net_finance_margin_buffer = percent_slider("Minimum net finance margin buffer", "pricing_min_net_finance_margin_buffer", 0.0, 10.0, 0.25)
+    with st.sidebar.expander("Supuestos de financiación", expanded=False):
+        financed_amount_pct = percent_slider("Monto financiado esperado como % del precio de reventa", "pricing_financed_amount_pct", 0.0, 100.0)
+        base_customer_apr = percent_slider("Cliente base APR", "pricing_base_customer_apr", 0.0, 30.0)
+        funding_cost_rate = percent_slider("Tasa de coste de financiación", "pricing_funding_cost_rate", 0.0, 20.0)
+        credit_risk_cost_rate = percent_slider("Tasa de coste del riesgo de crédito esperada", "pricing_credit_risk_cost_rate", 0.0, 20.0)
+        loan_term_months = st.number_input("Plazo medio del préstamo en meses", min_value=1, max_value=120, step=1, key="pricing_loan_term_months")
+        financing_take_up_rate = percent_slider("Tasa de absorción de financiación", "pricing_financing_take_up_rate", 0.0, 100.0)
+        min_net_finance_margin_buffer = percent_slider("Colchón mínimo de margen financiero neto", "pricing_min_net_finance_margin_buffer", 0.0, 10.0, 0.25)
 
-    with st.sidebar.expander("Cross-sell and loyalty", expanded=False):
-        insurance_attach_rate = percent_slider("Insurance attach rate base", "pricing_insurance_attach_rate", 0.0, 100.0)
-        insurance_commission = st.number_input("Insurance commission per policy", min_value=0, step=25, key="pricing_insurance_commission")
-        insurance_apr_discount = percent_slider("Interest rate discount if insurance is contracted", "pricing_insurance_apr_discount", 0.0, 10.0, 0.25)
-        fuel_card_attach_rate = percent_slider("Fuel card attach rate base", "pricing_fuel_card_attach_rate", 0.0, 100.0)
-        fuel_card_annual_margin = st.number_input("Fuel card annual margin", min_value=0, step=10, key="pricing_fuel_card_annual_margin")
-        fuel_card_years = st.number_input("Fuel card expected duration in years", min_value=0.0, max_value=10.0, step=0.25, key="pricing_fuel_card_years")
-        fuel_card_apr_discount = percent_slider("Interest rate discount if fuel card is contracted", "pricing_fuel_card_apr_discount", 0.0, 10.0, 0.25)
-        payroll_attach_rate = percent_slider("Payroll transfer attach rate base", "pricing_payroll_attach_rate", 0.0, 100.0)
-        payroll_lifetime_value = st.number_input("Payroll customer lifetime value", min_value=0, step=25, key="pricing_payroll_lifetime_value")
-        payroll_apr_discount = percent_slider("Interest rate discount if payroll is transferred", "pricing_payroll_apr_discount", 0.0, 10.0, 0.25)
+    with st.sidebar.expander("Venta cruzada y fidelización", expanded=False):
+        insurance_attach_rate = percent_slider("Base de tasa de fijación de seguros", "pricing_insurance_attach_rate", 0.0, 100.0)
+        insurance_commission = st.number_input("Comisión de seguro por póliza", min_value=0, step=25, key="pricing_insurance_commission")
+        insurance_apr_discount = percent_slider("Descuento en el tipo de interés si se contrata un seguro", "pricing_insurance_apr_discount", 0.0, 10.0, 0.25)
+        fuel_card_attach_rate = percent_slider("Base de tasa de conexión de tarjeta de combustible", "pricing_fuel_card_attach_rate", 0.0, 100.0)
+        fuel_card_annual_margin = st.number_input("Margen anual de la tarjeta de combustible", min_value=0, step=10, key="pricing_fuel_card_annual_margin")
+        fuel_card_years = st.number_input("Duración prevista de la tarjeta de combustible en años", min_value=0.0, max_value=10.0, step=0.25, key="pricing_fuel_card_years")
+        fuel_card_apr_discount = percent_slider("Descuento en el tipo de interés si se contrata tarjeta de combustible", "pricing_fuel_card_apr_discount", 0.0, 10.0, 0.25)
+        payroll_attach_rate = percent_slider("Base de tasa de fijación de transferencia de nómina", "pricing_payroll_attach_rate", 0.0, 100.0)
+        payroll_lifetime_value = st.number_input("Valor de vida del cliente de nómina", min_value=0, step=25, key="pricing_payroll_lifetime_value")
+        payroll_apr_discount = percent_slider("Descuento en tasa de interés si se transfiere nómina", "pricing_payroll_apr_discount", 0.0, 10.0, 0.25)
         attach_rate_elasticity = st.number_input(
-            "Elasticity parameter",
+            "Parámetro de elasticidad",
             min_value=0.0,
             max_value=20.0,
             step=0.25,
             key="pricing_attach_rate_elasticity",
-            help="Each 1 percentage point APR discount increases attach rate by this many percentage points.",
+            help="Cada descuento de 1 punto porcentual APR aumenta la tasa de fijación en esa cantidad de puntos porcentuales.",
         )
 
     vehicle_params = {
@@ -654,7 +654,7 @@ def render_sidebar(df: pd.DataFrame) -> tuple[str, str, dict[str, Any], dict[str
         vehicle_defaults,
         pricing_defaults,
     )
-    st.sidebar.caption(f"Manual overrides active: {'Yes' if customized else 'No'}")
+    st.sidebar.caption(f"Cambios manuales activos: {'Sí' if customized else 'No'}")
     return vehicle_preset, pricing_preset, vehicle_params, pricing_params, budget_params, customized
 
 
@@ -736,7 +736,7 @@ def compute_economics(
     result["transaction_cost"] = pricing_params["transaction_cost"]
     result["financed_amount"] = result["conservative_resale_price"] * pricing_params["financed_amount_pct"]
 
-    # APR discounts improve the product bundle. The elasticity translates discount size into attach-rate uplift.
+    # Los descuentos APR mejoran el paquete de productos. La elasticidad traduce el tamaño del descuento en un aumento de la tasa de interés.
     adjusted_insurance_attach_rate = clipped(
         pricing_params["insurance_attach_rate"]
         + pricing_params["attach_rate_elasticity"] * pricing_params["insurance_apr_discount"]
@@ -801,7 +801,7 @@ def compute_economics(
     result["expected_roi"] = safe_divide(result["expected_total_profit"], result["capital_deployed"])
     result["quality_weight"] = np.where(result["quality_issue"], 0.7, 1.0)
 
-    # Resale speed is a transparent proxy, not a trained model: attractive score, lower age, and lower mileage.
+    # La velocidad de reventa es un indicador transparente, no un modelo entrenado: puntuación atractiva, menor edad y menor kilometraje.
     result["resale_speed_score"] = (
         0.50 * result["top_price_probability"].fillna(0)
         + 0.25 * normalized_inverse(result["age_years"])
@@ -834,18 +834,18 @@ def compute_economics(
 
 
 def portfolio_fit_weight(df: pd.DataFrame, vehicle_preset: str, vehicle_params: dict[str, Any]) -> pd.Series:
-    if vehicle_preset == "Broad Market":
+    if vehicle_preset == "Mercado amplio":
         return pd.Series(1.0, index=df.index)
-    if vehicle_preset == "Young Low-Mileage Core":
+    if vehicle_preset == "Núcleo joven con bajo kilometraje":
         return (0.80 + 0.20 * normalized_inverse(df["age_years"]) + 0.20 * normalized_inverse(df["mileage_km"])).clip(0.8, 1.2)
-    if vehicle_preset == "Mainstream Retail Campaign":
+    if vehicle_preset == "Campaña retail generalista":
         selected_fuels = set(vehicle_params["fuel_types"])
         fuel_reward = df["fuel_type"].isin(selected_fuels).astype(float)
         moderate_price = 1 - (normalized_positive(df["actual_price_eur"]) - 0.5).abs() * 2
         return (0.85 + 0.20 * fuel_reward + 0.15 * moderate_price).clip(0.75, 1.2)
-    if vehicle_preset == "Higher-Ticket Margin":
+    if vehicle_preset == "Margen en vehículos de mayor precio":
         return (0.80 + 0.20 * normalized_positive(df["vehicle_margin"]) + 0.20 * normalized_positive(df["conservative_resale_price"])).clip(0.8, 1.25)
-    if vehicle_preset == "Conservative Risk":
+    if vehicle_preset == "Riesgo conservador":
         no_flags = (~df["quality_issue"]).astype(float)
         return (
             0.70
@@ -926,12 +926,12 @@ def select_portfolio(df: pd.DataFrame, budget_params: dict[str, Any]) -> pd.Data
 def assign_recommended_actions(full_df: pd.DataFrame, selected_ids: set[Any]) -> pd.DataFrame:
     result = full_df.copy()
     result["selected"] = result["listing_id"].isin(selected_ids)
-    result["recommended_action"] = "Do not prioritize"
+    result["recommended_action"] = "No priorizar"
     result.loc[
         result["selected"] & (result["expected_total_profit"] > 0) & (~result["quality_issue"]),
         "recommended_action",
-    ] = "Buy candidate"
-    result.loc[result["selected"] & result["quality_issue"], "recommended_action"] = "Manual review"
+    ] = "Candidato a compra"
+    result.loc[result["selected"] & result["quality_issue"], "recommended_action"] = "Revisión manual"
     return result
 
 
@@ -991,22 +991,22 @@ def portfolio_warnings(
 ) -> list[str]:
     warnings = []
     if eligible.empty:
-        warnings.append("No vehicles meet the current strategy criteria.")
+        warnings.append("Ningún vehículo cumple con los criterios de la estrategia actual.")
     elif len(eligible) < max(10, len(df) * 0.03):
-        warnings.append("The eligible universe is small. The mandate may be too narrow for a robust committee decision.")
+        warnings.append("El universo elegible es pequeño. El mandato puede ser demasiado limitado para una decisión sólida del comité.")
     if selected.empty:
-        warnings.append("No vehicles were selected because no positive business candidates fit the budget and assumptions.")
+        warnings.append("No se seleccionó ningún vehículo porque ningún candidato comercial positivo se ajustaba al presupuesto y los supuestos.")
     budget_used = summary["capital_deployed"] / budget_params["budget_eur"] if budget_params["budget_eur"] else 0
     if selected.shape[0] > 0 and budget_used < 0.50:
-        warnings.append("The selected portfolio uses less than half of the available budget.")
+        warnings.append("La cartera seleccionada utiliza menos de la mitad del presupuesto disponible.")
     if selected.shape[0] > 0 and selected["fuel_type"].value_counts(normalize=True).iloc[0] > 0.70:
-        warnings.append("The selected portfolio is concentrated in one fuel type.")
+        warnings.append("El portafolio seleccionado se concentra en un tipo de combustible.")
     if selected.shape[0] > 0:
         price_bands = pd.cut(selected["actual_price_eur"], bins=4, duplicates="drop")
         if price_bands.value_counts(normalize=True).iloc[0] > 0.70:
-            warnings.append("The selected portfolio is concentrated in one purchase price band.")
+            warnings.append("La cartera seleccionada se concentra en una banda de precios de compra.")
     if summary["expected_total_profit"] > 0 and summary["cross_sell_income"] / summary["expected_total_profit"] > 0.50:
-        warnings.append("Expected ROI is strongly influenced by cross-sell and loyalty assumptions.")
+        warnings.append("El ROI esperado está fuertemente influenciado por los supuestos de lealtad y venta cruzada.")
     return warnings
 
 
@@ -1055,153 +1055,153 @@ def risk_confidence_metrics(
 def risk_confidence_warnings(metrics: dict[str, float]) -> list[str]:
     warnings = []
     if metrics["model_output_coverage"] < 0.90:
-        warnings.append("Model output coverage is below 90%.")
+        warnings.append("La cobertura de salida del modelo es inferior al 90%.")
     if metrics["selected_quality_share"] > 0:
-        warnings.append("The selected portfolio includes vehicles with quality flags.")
+        warnings.append("El portafolio seleccionado incluye vehículos con banderas de calidad.")
     if metrics["fuel_concentration"] > 0.70:
-        warnings.append("Fuel type concentration is above 70%.")
+        warnings.append("La concentración del tipo de combustible es superior al 70%.")
     if metrics["price_band_concentration"] > 0.70:
-        warnings.append("Price band concentration is above 70%.")
+        warnings.append("La concentración de la banda de precios es superior al 70%.")
     if metrics["cross_sell_dependency"] > 0.50:
-        warnings.append("Cross-sell dependency is above 50% of expected profit.")
+        warnings.append("La dependencia de las ventas cruzadas supera el 50% del beneficio esperado.")
     if metrics["budget_used"] < 0.50:
-        warnings.append("The selected portfolio uses less than 50% of the available budget.")
+        warnings.append("La cartera seleccionada utiliza menos del 50% del presupuesto disponible.")
     return warnings
 
 
 def committee_decision(summary: dict[str, float], risk_warnings: list[str]) -> tuple[str, list[str], list[str]]:
     if summary["selected_count"] == 0 or summary["expected_roi"] < 0.05:
-        status = "Do not proceed"
+        status = "No avanzar"
     elif summary["expected_roi"] >= 0.12 and not risk_warnings:
-        status = "Recommend"
+        status = "Recomendar"
     else:
-        status = "Review"
+        status = "Revisar"
 
     reasons = [
-        f"Selected {summary['selected_count']:,} vehicles under the current mandate.",
-        f"Expected portfolio ROI is {fmt_pct(summary['expected_roi'])}.",
-        f"Expected total profit is {fmt_eur(summary['expected_total_profit'])}.",
+        f"{summary['selected_count']:,} vehículos seleccionados bajo el mandato actual.",
+        f"El ROI esperado del portfolio es {fmt_pct(summary['expected_roi'])}.",
+        f"El beneficio total esperado es {fmt_eur(summary['expected_total_profit'])}.",
     ]
     risks = (risk_warnings + [
-        "Validate resale timing, reconditioning capacity, and final purchase conditions.",
-        "Confirm that commercial attach-rate assumptions are realistic for this campaign.",
-        "Review individual vehicle quality flags before any acquisition decision.",
+        "Validar tiempos de reventa, capacidad de reacondicionamiento y condiciones finales de compra.",
+        "Confirme que los supuestos sobre la tasa de fijación comercial sean realistas para esta campaña.",
+        "Revise los indicadores de calidad de los vehículos individuales antes de cualquier decisión de adquisición.",
     ])[:3]
     return status, reasons[:3], risks
 
 
 def render_committee_decision(summary: dict[str, float], risk_warnings: list[str]) -> None:
     status, reasons, risks = committee_decision(summary, risk_warnings)
-    if status == "Recommend":
-        st.success(f"**Decision status: {status}**")
-    elif status == "Review":
-        st.warning(f"**Decision status: {status}**")
+    if status == "Recomendar":
+        st.success(f"**Estado de decisión: {status}**")
+    elif status == "Revisar":
+        st.warning(f"**Estado de decisión: {status}**")
     else:
-        st.error(f"**Decision status: {status}**")
+        st.error(f"**Estado de decisión: {status}**")
 
     reason_col, risk_col = st.columns(2)
     with reason_col:
-        st.markdown("**Reasons**")
+        st.markdown("**Razones**")
         for reason in reasons:
             st.markdown(f"- {reason}")
     with risk_col:
-        st.markdown("**Risks or validation points**")
+        st.markdown("**Riesgos o puntos de validación**")
         for risk in risks:
             st.markdown(f"- {risk}")
 
     st.caption(
-        "The decision status is a simulation output for committee discussion. It is not a final acquisition, "
-        "credit, compliance, or risk approval."
+        "El estado de la decisión es un resultado de simulación para la discusión del comité. No es una adquisición definitiva, "
+        "aprobación de crédito, cumplimiento o riesgo."
     )
 
 
 def main_risk_driver(metrics: dict[str, float]) -> tuple[str, str]:
     if metrics["model_output_coverage"] < 0.90:
-        return "Low model output coverage", "Model signals are missing for a material share of the vehicle universe."
+        return "Cobertura de salida de modelo baja", "Faltan señales modelo para una parte importante del universo de vehículos."
     if metrics["selected_quality_share"] > 0:
-        return "Selected vehicle quality flags", "Some selected vehicles require manual quality review before action."
+        return "Banderas de calidad de vehículos seleccionadas", "Algunos vehículos seleccionados requieren una revisión de calidad manual antes de actuar."
     if metrics["fuel_concentration"] > 0.70:
-        return "Fuel type concentration", "The selected portfolio is concentrated in one fuel type."
+        return "Concentración del tipo de combustible", "El portafolio seleccionado se concentra en un tipo de combustible."
     if metrics["price_band_concentration"] > 0.70:
-        return "Price band concentration", "The selected portfolio is concentrated in one purchase price band."
+        return "Concentración de la banda de precios", "La cartera seleccionada se concentra en una banda de precios de compra."
     if metrics["cross_sell_dependency"] > 0.50:
         return (
-            "Cross-sell dependency",
-            "Cross-sell dependency means expected profit relies materially on commercial attach-rate assumptions.",
+            "Dependencia de venta cruzada",
+            "La dependencia de las ventas cruzadas significa que las ganancias esperadas dependen materialmente de supuestos de tasas de fijación comerciales.",
         )
     if metrics["budget_used"] < 0.50:
         return (
-            "Low budget deployment",
-            "Low budget deployment means the current mandate may be too restrictive to absorb available capital.",
+            "Despliegue de bajo presupuesto",
+            "El bajo despliegue presupuestario significa que el mandato actual puede ser demasiado restrictivo para absorber el capital disponible.",
         )
-    return "No major risk driver detected", "The current risk indicators do not show a dominant single concern."
+    return "No se ha detectado ningún factor de riesgo importante", "Los indicadores de riesgo actuales no muestran una única preocupación dominante."
 
 
 def render_risk_confidence(metrics: dict[str, float], warnings: list[str]) -> None:
     row1 = st.columns(3)
-    row1[0].metric("Model output coverage", fmt_pct(metrics["model_output_coverage"]))
-    row1[1].metric("Missing model outputs excluded", f"{metrics['missing_model_outputs_excluded']:,}")
-    row1[2].metric("Eligible vehicles with quality flags", fmt_pct(metrics["eligible_quality_share"]))
+    row1[0].metric("Cobertura de salida del modelo", fmt_pct(metrics["model_output_coverage"]))
+    row1[1].metric("Se excluyen los resultados del modelo que faltan", f"{metrics['missing_model_outputs_excluded']:,}")
+    row1[2].metric("Vehículos elegibles con banderas de calidad.", fmt_pct(metrics["eligible_quality_share"]))
 
     row2 = st.columns(4)
-    row2[0].metric("Selected vehicles with quality flags", fmt_pct(metrics["selected_quality_share"]))
-    row2[1].metric("Highest fuel concentration", fmt_pct(metrics["fuel_concentration"]))
-    row2[2].metric("Highest price band concentration", fmt_pct(metrics["price_band_concentration"]))
-    row2[3].metric("Cross-sell dependency ratio", fmt_pct(metrics["cross_sell_dependency"]))
+    row2[0].metric("Vehículos seleccionados con banderas de calidad.", fmt_pct(metrics["selected_quality_share"]))
+    row2[1].metric("Mayor concentración de combustible", fmt_pct(metrics["fuel_concentration"]))
+    row2[2].metric("Mayor concentración de la banda de precios", fmt_pct(metrics["price_band_concentration"]))
+    row2[3].metric("Tasa de dependencia de ventas cruzadas", fmt_pct(metrics["cross_sell_dependency"]))
 
     driver, explanation = main_risk_driver(metrics)
-    st.markdown(f"**Main risk driver:** {driver}. {explanation}")
+    st.markdown(f"**Principal driver de riesgo:** {driver}. {explanation}")
 
     for warning in warnings:
         st.warning(warning)
 
 
 def strategy_interpretation(vehicle_preset: str, pricing_preset: str) -> str:
-    if vehicle_preset == "Broad Market":
-        priority = "volume and opportunity discovery"
-    elif vehicle_preset == "Young Low-Mileage Core":
-        priority = "portfolio cleanliness and resale simplicity"
-    elif vehicle_preset == "Mainstream Retail Campaign":
-        priority = "campaign coherence and easy-to-explain retail selection"
-    elif vehicle_preset == "Higher-Ticket Margin":
-        priority = "unit margin with capital concentration"
+    if vehicle_preset == "Mercado amplio":
+        priority = "descubrimiento de volumen y oportunidades"
+    elif vehicle_preset == "Núcleo joven con bajo kilometraje":
+        priority = "limpieza de cartera y simplicidad de reventa"
+    elif vehicle_preset == "Campaña retail generalista":
+        priority = "Coherencia de la campaña y selección minorista fácil de explicar."
+    elif vehicle_preset == "Margen en vehículos de mayor precio":
+        priority = "margen unitario con concentración de capital"
     else:
-        priority = "risk control and defensibility"
+        priority = "control de riesgos y defensa"
 
-    if pricing_preset == "Customer Loyalty Focus":
-        priority += " with customer loyalty economics"
-    elif pricing_preset == "Aggressive Cross-Sell":
-        priority += " with commercial bundling"
-    elif pricing_preset == "Stress Case":
-        priority += " under adverse assumptions"
-    return f"This strategy prioritizes {priority}."
+    if pricing_preset == "Foco en fidelización":
+        priority += " con la economía de la lealtad del cliente"
+    elif pricing_preset == "Venta cruzada agresiva":
+        priority += " con paquete comercial"
+    elif pricing_preset == "Escenario de estrés":
+        priority += " bajo supuestos adversos"
+    return f"Esta estrategia prioriza {priority}."
 
 
 def deterministic_recommendation(summary: dict[str, float], warnings: list[str]) -> str:
     roi = summary["expected_roi"]
     if summary["selected_count"] == 0:
-        status = "unattractive"
-        reason = "no vehicles meet the current investment and profitability criteria"
+        status = "poco atractiva"
+        reason = "Ningún vehículo cumple con los criterios actuales de inversión y rentabilidad."
     elif roi >= 0.12:
-        status = "attractive"
-        reason = "expected portfolio ROI is above a strong committee threshold"
+        status = "atractiva"
+        reason = "el ROI esperado del portfolio está por encima de un umbral fuerte para comité"
     elif roi >= 0.05:
-        status = "borderline"
-        reason = "expected ROI is positive but requires careful validation"
+        status = "en revisión"
+        reason = "el ROI esperado es positivo pero requiere validación cuidadosa"
     else:
-        status = "unattractive"
-        reason = "expected ROI is too low for the current assumptions"
+        status = "poco atractiva"
+        reason = "el ROI esperado es demasiado bajo para los supuestos actuales"
 
     drivers = {
-        "vehicle resale margin": summary["vehicle_margin"],
-        "financing margin": summary["finance_margin"],
-        "cross-sell and loyalty income": summary["cross_sell_income"],
+        "margen de reventa del vehículo": summary["vehicle_margin"],
+        "margen de financiación": summary["finance_margin"],
+        "ingresos por venta cruzada y fidelización": summary["cross_sell_income"],
     }
     driver = max(drivers, key=drivers.get)
-    caution = warnings[0] if warnings else "Validate pricing, resale timing, and operational capacity before approval."
+    caution = warnings[0] if warnings else "Valide los precios, el momento de la reventa y la capacidad operativa antes de la aprobación."
     return (
-        f"The current strategy is **{status}** because {reason}. "
-        f"The main value driver is **{driver}**. Main caution: {caution}"
+        f"La estrategia actual es **{status}** porque {reason}. "
+        f"El principal driver de valor es **{driver}**. Principal cautela: {caution}"
     )
 
 
@@ -1215,26 +1215,26 @@ def fmt_pct(value: float) -> str:
 
 def render_kpis(summary: dict[str, float], budget_params: dict[str, Any]) -> None:
     row1 = st.columns(4)
-    row1[0].metric("Investment budget", fmt_eur(budget_params["budget_eur"]))
-    row1[1].metric("Capital deployed", fmt_eur(summary["capital_deployed"]))
-    row1[2].metric("Remaining budget", fmt_eur(summary["remaining_budget"]))
-    row1[3].metric("Selected vehicles", f"{summary['selected_count']:,}")
+    row1[0].metric("Presupuesto de inversión", fmt_eur(budget_params["budget_eur"]))
+    row1[1].metric("Capital desplegado", fmt_eur(summary["capital_deployed"]))
+    row1[2].metric("Presupuesto restante", fmt_eur(summary["remaining_budget"]))
+    row1[3].metric("Vehículos seleccionados", f"{summary['selected_count']:,}")
 
     row2 = st.columns(4)
-    row2[0].metric("Expected total profit", fmt_eur(summary["expected_total_profit"]))
-    row2[1].metric("Expected portfolio ROI", fmt_pct(summary["expected_roi"]))
-    row2[2].metric("Vehicle resale margin", fmt_eur(summary["vehicle_margin"]))
-    row2[3].metric("Financing margin", fmt_eur(summary["finance_margin"]))
+    row2[0].metric("Beneficio total esperado", fmt_eur(summary["expected_total_profit"]))
+    row2[1].metric("Cartera esperada ROI", fmt_pct(summary["expected_roi"]))
+    row2[2].metric("Margen de reventa de vehículos", fmt_eur(summary["vehicle_margin"]))
+    row2[3].metric("Margen de financiación", fmt_eur(summary["finance_margin"]))
 
     row3 = st.columns(4)
-    row3[0].metric("Cross-sell and loyalty income", fmt_eur(summary["cross_sell_income"]))
+    row3[0].metric("Ingresos por venta cruzada y fidelización", fmt_eur(summary["cross_sell_income"]))
     row3[1].metric(
-        "Average commercial attractiveness score",
+        "Puntuación media de atractivo comercial",
         fmt_pct(summary["avg_top_price_probability"]),
-        help="This score comes from the upstream classification model field `top_price_probability`.",
+        help="Esta puntuación proviene del campo del modelo de clasificación ascendente `top_price_probability`.",
     )
-    row3[2].metric("Average expected discount %", fmt_pct(summary["avg_expected_discount_pct"]))
-    row3[3].metric("Average profit per vehicle", fmt_eur(summary["avg_expected_profit_per_vehicle"]))
+    row3[2].metric("% de descuento esperado promedio", fmt_pct(summary["avg_expected_discount_pct"]))
+    row3[3].metric("Beneficio medio por vehículo", fmt_eur(summary["avg_expected_profit_per_vehicle"]))
 
 
 def strategy_overview_markdown(
@@ -1246,27 +1246,27 @@ def strategy_overview_markdown(
     customized: bool,
 ) -> str:
     return f"""
-**Selected vehicle strategy:** {vehicle_preset}  
-**Selected pricing and cross-sell strategy:** {pricing_preset}  
-**Manual customization:** {"Yes" if customized else "No"}
+**Estrategia de vehículo seleccionada:** {vehicle_preset}  
+**Estrategia de pricing y venta cruzada seleccionada:** {pricing_preset}  
+**Personalización manual:** {'Sí' if customized else 'No'}
 
-**Eligible vehicle mandate**
-- Age range: {vehicle_params["age_range"][0]:,.1f} to {vehicle_params["age_range"][1]:,.1f} years
-- Mileage range: {vehicle_params["mileage_range"][0]:,.0f} to {vehicle_params["mileage_range"][1]:,.0f} km
-- Fuel types: {", ".join(vehicle_params["fuel_types"]) if vehicle_params["fuel_types"] else "None selected"}
-- Purchase price range: {fmt_eur(vehicle_params["price_range"][0])} to {fmt_eur(vehicle_params["price_range"][1])}
-- Minimum commercial attractiveness score: {fmt_pct(vehicle_params["min_top_price_probability"])}
-- Minimum expected discount: {fmt_pct(vehicle_params["min_expected_discount_pct"])}
+**Mandato de vehículos elegibles**
+- Rango de edad: {vehicle_params["age_range"][0]:,.1f} a {vehicle_params["age_range"][1]:,.1f} años
+- Rango de kilometraje: {vehicle_params["mileage_range"][0]:,.0f} a {vehicle_params["mileage_range"][1]:,.0f} km
+- Tipos de combustible: {", ".join(vehicle_params["fuel_types"]) if vehicle_params["fuel_types"] else "Ninguno seleccionado"}
+- Rango de precio de compra: {fmt_eur(vehicle_params["price_range"][0])} a {fmt_eur(vehicle_params["price_range"][1])}
+- Score mínimo de atractivo comercial: {fmt_pct(vehicle_params["min_top_price_probability"])}
+- Descuento esperado mínimo: {fmt_pct(vehicle_params["min_expected_discount_pct"])}
 
-**Commercial strategy**
-- Resale haircut: {fmt_pct(pricing_params["resale_haircut"])}
-- Financing take-up: {fmt_pct(pricing_params["financing_take_up_rate"])}
-- Expected effective APR after weighted cross-sell discounts: {fmt_pct(metadata["effective_customer_apr"])}
-- Expected weighted APR discount: {fmt_pct(metadata["expected_total_apr_discount"])}
-- Product APR discounts: insurance {fmt_pct(pricing_params["insurance_apr_discount"])}, fuel card {fmt_pct(pricing_params["fuel_card_apr_discount"])}, payroll transfer {fmt_pct(pricing_params["payroll_apr_discount"])}
-- Insurance attach rate: {fmt_pct(pricing_params["insurance_attach_rate"])} base -> {fmt_pct(metadata["adjusted_insurance_attach_rate"])} expected after discount effect
-- Fuel card attach rate: {fmt_pct(pricing_params["fuel_card_attach_rate"])} base -> {fmt_pct(metadata["adjusted_fuel_card_attach_rate"])} expected after discount effect
-- Payroll transfer attach rate: {fmt_pct(pricing_params["payroll_attach_rate"])} base -> {fmt_pct(metadata["adjusted_payroll_attach_rate"])} expected after discount effect
+**Estrategia comercial**
+- Haircut de reventa: {fmt_pct(pricing_params["resale_haircut"])}
+- Tasa de contratación de financiación: {fmt_pct(pricing_params["financing_take_up_rate"])}
+- APR efectivo esperado tras descuentos ponderados de venta cruzada: {fmt_pct(metadata["effective_customer_apr"])}
+- Descuento APR ponderado esperado: {fmt_pct(metadata["expected_total_apr_discount"])}
+- Descuentos APR por producto: seguro {fmt_pct(pricing_params["insurance_apr_discount"])}, tarjeta de combustible {fmt_pct(pricing_params["fuel_card_apr_discount"])}, nómina {fmt_pct(pricing_params["payroll_apr_discount"])}
+- Tasa de contratación de seguro: {fmt_pct(pricing_params["insurance_attach_rate"])} base -> {fmt_pct(metadata["adjusted_insurance_attach_rate"])} esperada tras el efecto del descuento
+- Tasa de contratación de tarjeta de combustible: {fmt_pct(pricing_params["fuel_card_attach_rate"])} base -> {fmt_pct(metadata["adjusted_fuel_card_attach_rate"])} esperada tras el efecto del descuento
+- Tasa de vinculación de nómina: {fmt_pct(pricing_params["payroll_attach_rate"])} base -> {fmt_pct(metadata["adjusted_payroll_attach_rate"])} esperada tras el efecto del descuento
 
 {strategy_interpretation(vehicle_preset, pricing_preset)}
 """
@@ -1275,17 +1275,17 @@ def strategy_overview_markdown(
 def component_chart(summary: dict[str, float]) -> None:
     components = pd.DataFrame(
         {
-            "Component": [
-                "Gross resale spread",
-                "Reconditioning cost",
-                "Transaction cost",
-                "Financing margin",
-                "Insurance income",
-                "Fuel card income",
-                "Payroll income",
-                "Inventory funding cost",
+            "Componente": [
+                "Diferencial bruto de reventa",
+                "Costo de reacondicionamiento",
+                "Costo de transacción",
+                "Margen de financiación",
+                "Ingresos por seguros",
+                "Ingresos por tarjeta de combustible",
+                "Ingresos de nómina",
+                "Costo de financiación del inventario",
             ],
-            "Amount": [
+            "Importe": [
                 summary["gross_resale_spread"],
                 -summary["reconditioning_cost"],
                 -summary["transaction_cost"],
@@ -1297,7 +1297,7 @@ def component_chart(summary: dict[str, float]) -> None:
             ],
         }
     )
-    fig = px.bar(components, x="Component", y="Amount", title="Expected profit components")
+    fig = px.bar(components, x="Componente", y="Importe", title="Componentes de ganancias esperadas")
     fig.update_layout(xaxis_title="", yaxis_title="EUR", showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
@@ -1330,38 +1330,38 @@ def selected_table(selected: pd.DataFrame) -> pd.DataFrame:
     table = selected[[column for column in columns if column in selected.columns]].copy()
     return table.rename(
         columns={
-            "listing_id": "Listing ID",
-            "make": "Make",
-            "model": "Model",
-            "fuel_type": "Fuel type",
-            "actual_price_eur": "Purchase price",
-            "expected_price_eur": "Expected market price",
-            "expected_discount_pct": "Expected discount %",
-            "top_price_probability": "Commercial attractiveness score",
-            "vehicle_margin": "Vehicle margin",
-            "finance_margin": "Financing margin",
-            "insurance_income": "Insurance income",
-            "fuel_card_income": "Fuel card income",
-            "payroll_income": "Payroll income",
-            "cross_sell_income": "Cross-sell income",
-            "expected_total_profit": "Expected profit",
-            "expected_roi": "Expected ROI",
-            "investment_score": "Investment score",
-            "recommended_action": "Recommended action",
-            "price_outlier_iqr": "Price outlier flag",
-            "mileage_outlier_iqr": "Mileage outlier flag",
-            "power_outlier_iqr": "Power outlier flag",
-            "logical_issue": "Logical issue flag",
+            "listing_id": "ID de listado",
+            "make": "Marca",
+            "model": "Modelo",
+            "fuel_type": "Tipo de combustible",
+            "actual_price_eur": "Precio de compra",
+            "expected_price_eur": "Precio de mercado esperado",
+            "expected_discount_pct": "% de descuento esperado",
+            "top_price_probability": "Puntuación de atractivo comercial",
+            "vehicle_margin": "Margen del vehículo",
+            "finance_margin": "Margen de financiación",
+            "insurance_income": "Ingresos por seguros",
+            "fuel_card_income": "Ingresos por tarjeta de combustible",
+            "payroll_income": "Ingresos de nómina",
+            "cross_sell_income": "Ingresos por venta cruzada",
+            "expected_total_profit": "Beneficio esperado",
+            "expected_roi": "ROI esperado",
+            "investment_score": "Puntuación de inversión",
+            "recommended_action": "Acción recomendada",
+            "price_outlier_iqr": "Bandera de precio atípico",
+            "mileage_outlier_iqr": "Bandera de valor atípico de kilometraje",
+            "power_outlier_iqr": "Bandera de valor atípico de potencia",
+            "logical_issue": "Marca de problema lógico",
         }
     )
 
 
 def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
     if eligible_with_actions.empty:
-        st.info("No eligible vehicles are available for the current strategy.")
+        st.info("No hay vehículos elegibles disponibles para la estrategia actual.")
         return
     plot_df = eligible_with_actions.copy()
-    plot_df["selection_status"] = np.where(plot_df["selected"], "Selected", "Not selected")
+    plot_df["selection_status"] = np.where(plot_df["selected"], "Seleccionado", "No seleccionado")
     fig = px.scatter(
         plot_df,
         x="expected_discount_pct",
@@ -1380,17 +1380,17 @@ def scatter_chart(eligible_with_actions: pd.DataFrame) -> None:
             "expected_total_profit",
             "expected_roi",
         ],
-        title="Opportunity map: expected discount vs commercial attractiveness score",
+        title="Mapa de oportunidades: descuento esperado versus puntaje de atractivo comercial",
         labels={
-            "top_price_probability": "Commercial attractiveness score",
-            "expected_discount_pct": "Expected discount %",
-            "actual_price_eur": "Actual price EUR",
-            "expected_price_eur": "Expected price EUR",
-            "expected_total_profit": "Expected total profit",
-            "expected_roi": "Expected ROI",
+            "top_price_probability": "Puntuación de atractivo comercial",
+            "expected_discount_pct": "% de descuento esperado",
+            "actual_price_eur": "Precio real EUR",
+            "expected_price_eur": "Precio esperado EUR",
+            "expected_total_profit": "Beneficio total esperado",
+            "expected_roi": "ROI esperado",
         },
     )
-    fig.update_layout(xaxis_title="Expected discount %", yaxis_title="Commercial attractiveness score")
+    fig.update_layout(xaxis_title="% de descuento esperado", yaxis_title="Puntuación de atractivo comercial")
     fig.update_xaxes(tickformat=".0%")
     fig.update_yaxes(tickformat=".0%")
     st.plotly_chart(fig, use_container_width=True)
@@ -1407,50 +1407,50 @@ def build_memo_prompt(
 ) -> str:
     top_candidates = selected_table(selected).head(10).to_dict(orient="records")
     return f"""
-Write a concise committee-ready memo in English for a consumer finance business.
+Escribe un memo conciso, listo para comité, en castellano, para un negocio de consumer finance.
 
-Required sections:
-1. Selected Strategy and Investment Mandate
-2. Executive Recommendation
-3. Portfolio Rationale
-4. Key Assumptions
-5. Expected Financial Result
-6. Cross-Sell and Loyalty Logic
-7. Main Risks and Model Limitations
-8. Suggested Next Validation Steps
+Secciones obligatorias:
+1. Estrategia seleccionada y mandato de inversión
+2. Recomendación ejecutiva
+3. Racional del portfolio
+4. Supuestos clave
+5. Resultado financiero esperado
+6. Lógica de venta cruzada y fidelización
+7. Principales riesgos y limitaciones del modelo
+8. Siguientes pasos sugeridos de validación
 
-Selected vehicle strategy: {vehicle_preset}
-Selected pricing and cross-sell strategy: {pricing_preset}
+Estrategia de vehículo seleccionada: {vehicle_preset}
+Estrategia de pricing y venta cruzada seleccionada: {pricing_preset}
 
-Selected strategy overview:
+Resumen de estrategia seleccionada:
 {overview}
 
-Aggregated metrics:
+Métricas agregadas:
 {summary}
 
-Pricing and cross-sell assumptions:
+Supuestos de pricing y venta cruzada:
 {pricing_params}
 
-Warnings:
+Avisos:
 {warnings}
 
-Top 10 selected candidates:
+Top 10 candidatos seleccionados:
 {top_candidates}
 
-The memo must explain the strategy that produced the portfolio, not simply summarize selected cars.
-Use "commercial attractiveness score" when referring to the classification model signal from `top_price_probability`.
-Include this exact warning:
-"This is a simulated decision-support tool. It is not a final acquisition, credit, compliance, or risk approval."
+El memo debe explicar la estrategia que produjo el portfolio, no limitarse a resumir coches seleccionados.
+Usa "score de atractivo comercial" al referirte a la señal del modelo de clasificación desde `top_price_probability`.
+Incluye este aviso exacto:
+"Esta es una herramienta simulada de soporte a la decisión. No es una aprobación final de adquisición, crédito, compliance o riesgo."
 
-Keep the memo concise, executive, and non-technical.
+Mantén el memo conciso, ejecutivo y no técnico.
 """
 
 
 def call_gemini(prompt: str) -> str:
     text, error = generate_gemini_content(prompt)
     if error:
-        return f"{error} Deterministic/default dashboard behavior is still available."
-    return text or "Gemini returned an empty response. Deterministic/default dashboard behavior is still available."
+        return f"{error} El comportamiento determinista/default del dashboard sigue disponible."
+    return text or "Gemini devolvió una respuesta vacía. El comportamiento determinista/predeterminado del panel todavía está disponible."
 
 
 def allowed_bi_view(project_id: str, dataset_id: str) -> str:
@@ -1460,7 +1460,7 @@ def allowed_bi_view(project_id: str, dataset_id: str) -> str:
 def build_demo_queries(project_id: str, dataset_id: str) -> dict[str, dict[str, Any]]:
     view = allowed_bi_view(project_id, dataset_id)
     return {
-        "Which listings should the committee review first?": {
+        "¿Qué listados debería revisar primero el comité?": {
             "sql": f"""
 SELECT
   listing_id,
@@ -1482,13 +1482,13 @@ WHERE decision_flag = 'high_priority_review'
 ORDER BY top_price_probability DESC, expected_price_gap_eur ASC
 LIMIT 25
 """,
-            "business_intent": "Rank the first listings the investment committee should review.",
-            "expected_output": "Listing-level priority queue with model signals and quality flags.",
+            "business_intent": "Clasifique las primeras cotizaciones que debe revisar el comité de inversiones.",
+            "expected_output": "Cola de prioridad a nivel de listado con señales de modelo e indicadores de calidad.",
             "chart_type": "table",
             "confidence": "high",
-            "limitations": ["Demo SQL uses the governed BI view and does not include local portfolio simulation economics."],
+            "limitations": ["La demostración SQL utiliza la vista gobernada BI y no incluye economía de simulación de cartera local."],
         },
-        "Which fuel types concentrate the strongest price opportunities?": {
+        "¿Qué tipos de combustible concentran las mayores oportunidades de precios?": {
             "sql": f"""
 SELECT
   fuel_type,
@@ -1502,13 +1502,13 @@ GROUP BY fuel_type
 ORDER BY high_priority_count DESC, avg_expected_price_gap_eur ASC
 LIMIT 20
 """,
-            "business_intent": "Identify fuel categories where below-expected-price opportunities concentrate.",
-            "expected_output": "Fuel-type aggregation by opportunity count, gap and top-price signal.",
+            "business_intent": "Identifique las categorías de combustible donde se concentran las oportunidades por debajo de expected-price.",
+            "expected_output": "Agregación de tipos de combustible por recuento de oportunidades, brecha y señal top-price.",
             "chart_type": "bar",
             "confidence": "high",
-            "limitations": ["Averages can hide listing-level quality issues."],
+            "limitations": ["Los promedios pueden ocultar problemas de calidad a nivel de listado."],
         },
-        "Where do regression and classification signals agree?": {
+        "¿Dónde coinciden las señales de regresión y clasificación?": {
             "sql": f"""
 SELECT
   decision_flag,
@@ -1522,13 +1522,13 @@ GROUP BY decision_flag
 ORDER BY avg_top_price_probability DESC, avg_expected_price_gap_eur ASC
 LIMIT 20
 """,
-            "business_intent": "Compare regression price-gap signals with classification top-price probability.",
-            "expected_output": "Decision-flag groups showing both model signals side by side.",
+            "business_intent": "Compare las señales de regresión de diferencia de precios con la probabilidad de clasificación top-price.",
+            "expected_output": "Grupos de indicadores de decisión que muestran ambas señales del modelo una al lado de la otra.",
             "chart_type": "scatter",
             "confidence": "high",
-            "limitations": ["Agreement is interpreted from aggregate averages, not a statistical test."],
+            "limitations": ["El acuerdo se interpreta a partir de promedios agregados, no de una prueba estadística."],
         },
-        "Which opportunities have quality or logical risk flags?": {
+        "¿Qué oportunidades tienen indicadores de calidad o de riesgo lógico?": {
             "sql": f"""
 SELECT
   listing_id,
@@ -1554,13 +1554,13 @@ WHERE expected_price_gap_eur < 0
 ORDER BY top_price_probability DESC, expected_price_gap_eur ASC
 LIMIT 50
 """,
-            "business_intent": "Surface promising listings that still need quality or logic-risk review.",
-            "expected_output": "Listing-level opportunity queue with risk flags visible.",
+            "business_intent": "Descubra listados prometedores que aún necesitan una revisión de calidad o de riesgo lógico.",
+            "expected_output": "Cola de oportunidades a nivel de listado con indicadores de riesgo visibles.",
             "chart_type": "table",
             "confidence": "high",
-            "limitations": ["Quality flags explain risk, not final acquisition rejection."],
+            "limitations": ["Las banderas de calidad explican el riesgo, no el rechazo final de la adquisición."],
         },
-        "How many listings fall into each decision flag?": {
+        "¿Cuántos listados caen en cada indicador de decisión?": {
             "sql": f"""
 SELECT
   decision_flag,
@@ -1573,11 +1573,11 @@ GROUP BY decision_flag
 ORDER BY listing_count DESC
 LIMIT 20
 """,
-            "business_intent": "Summarize the portfolio by governed BI decision flag.",
-            "expected_output": "Decision-flag distribution with average price and model signals.",
+            "business_intent": "Resuma la cartera según el indicador de decisión gobernado BI.",
+            "expected_output": "Distribución de banderas de decisión con precio promedio y señales de modelo.",
             "chart_type": "bar",
             "confidence": "high",
-            "limitations": ["This summarizes BI-view signals only, before local Streamlit strategy filters."],
+            "limitations": ["Esto resume solo las señales de vista BI, antes de los filtros de estrategia locales Streamlit."],
         },
     }
 
@@ -1585,69 +1585,69 @@ LIMIT 20
 def build_semantic_layer(project_id: str, dataset_id: str) -> str:
     field_lines = []
     for column in REQUIRED_COLUMNS:
-        meaning = BI_FIELD_MEANINGS.get(column, "allowed BI view field")
+        meaning = BI_FIELD_MEANINGS.get(column, "campo permitido de la vista BI")
         field_lines.append(f"- {column}: {meaning}")
     flag_lines = [f"- {flag}: {meaning}" for flag, meaning in DECISION_FLAG_MEANINGS.items()]
     return f"""
-Governed BI query surface:
-Allowed table: {allowed_bi_view(project_id, dataset_id)}
+Superficie de consulta BI gobernada:
+Tabla permitida: {allowed_bi_view(project_id, dataset_id)}
 
-Allowed fields:
+Campos permitidos:
 {chr(10).join(field_lines)}
 
-Decision flag meanings:
+Significado de `decision_flag`:
 {chr(10).join(flag_lines)}
 
-Quality and risk flags should not be ignored when making recommendations:
+Los flags de calidad y riesgo no deben ignorarse al hacer recomendaciones:
 price_outlier_iqr, mileage_outlier_iqr, power_outlier_iqr, logical_issue.
 """
 
 
 def build_sql_generation_prompt(question: str, project_id: str, dataset_id: str) -> str:
     return f"""
-You are generating BigQuery Standard SQL for a read-only BI assistant.
-This is a conversational decision-support layer over a governed BI data product.
-The LLM writes candidate SQL. The application owns validation. BigQuery owns the data. The user owns the decision.
+Estás generando BigQuery Standard SQL para un asistente BI de sólo lectura.
+Esta es una capa conversacional de soporte a la decisión sobre un producto de datos BI gobernado.
+El LLM escribe SQL candidato. La aplicación controla la validación. BigQuery controla los datos. El usuario toma la decisión.
 
 {build_semantic_layer(project_id, dataset_id)}
 
-Return JSON only with this schema:
+Devuelve sólo JSON con este schema:
 {{
   "sql": "SELECT ...",
-  "business_intent": "short explanation of the user's business question",
-  "expected_output": "what the query is expected to return",
+  "business_intent": "explicación breve de la pregunta de negocio del usuario",
+  "expected_output": "qué se espera que devuelva la consulta",
   "chart_type": "table|bar|scatter|line|none",
   "confidence": "high|medium|low",
-  "limitations": ["limitation 1", "limitation 2"]
+  "limitations": ["limitación 1", "limitación 2"]
 }}
 
-Rules:
-- Return JSON only.
-- Generate one SQL statement only.
-- Generate SELECT queries only.
-- Never generate INSERT, UPDATE, DELETE, MERGE, CREATE, DROP, ALTER, TRUNCATE, GRANT, REVOKE, CALL or EXECUTE.
-- Never query INFORMATION_SCHEMA.
-- Never include SQL comments.
-- Never use SELECT *.
-- Never invent columns.
-- Use only the columns listed in the semantic layer.
-- Prefer aggregation for broad questions.
-- For listing-level results, always include LIMIT 100 or less.
-- Use BigQuery-safe snake_case aliases only. Do not use spaces, punctuation, parentheses, or backticks in aliases.
-- For "best opportunities", prioritize decision_flag = 'high_priority_review', expected_price_gap_eur < 0,
-  high top_price_probability, and no logical_issue when relevant.
-- If the question is ambiguous, make a conservative assumption and state it in the JSON limitations.
-- Do not answer with SQL that requires local Streamlit-calculated fields such as expected_total_profit,
-  expected_roi, vehicle_margin, finance_margin, cross_sell_income or investment_score.
+Reglas:
+- Devuelve sólo JSON.
+- Genera una única sentencia SQL.
+- Genera sólo consultas SELECT.
+- No generes nunca INSERT, UPDATE, DELETE, MERGE, CREATE, DROP, ALTER, TRUNCATE, GRANT, REVOKE, CALL ni EXECUTE.
+- No consultes INFORMATION_SCHEMA.
+- No incluyas comentarios SQL.
+- No uses SELECT *.
+- No inventes columnas.
+- Usa sólo las columnas listadas en la capa semántica.
+- Prefiere agregaciones para preguntas amplias.
+- Para resultados a nivel de listing, incluye siempre LIMIT 100 o menos.
+- Usa sólo alias snake_case válidos en BigQuery. No uses espacios, puntuación, paréntesis ni backticks en alias.
+- Para "mejores oportunidades", prioriza decision_flag = 'high_priority_review', expected_price_gap_eur < 0,
+  top_price_probability alto y sin logical_issue cuando sea relevante.
+- Si la pregunta es ambigua, haz una suposición conservadora y declárala en las limitaciones JSON.
+- No respondas con SQL que requiera campos calculados localmente por Streamlit como expected_total_profit,
+  expected_roi, vehicle_margin, finance_margin, cross_sell_income o investment_score.
 
-User question:
+Pregunta del usuario:
 {question}
 """
 
 
 def parse_gemini_json(text: str) -> tuple[dict[str, Any] | None, str | None]:
     if not text or not text.strip():
-        return None, "Gemini returned an empty response."
+        return None, "Gemini devolvió una respuesta vacía."
 
     cleaned = text.strip()
     if cleaned.startswith("```"):
@@ -1656,7 +1656,7 @@ def parse_gemini_json(text: str) -> tuple[dict[str, Any] | None, str | None]:
 
     start = cleaned.find("{")
     if start == -1:
-        return None, "Gemini response did not contain a JSON object."
+        return None, "La respuesta Gemini no contenía un objeto JSON."
 
     depth = 0
     in_string = False
@@ -1683,14 +1683,14 @@ def parse_gemini_json(text: str) -> tuple[dict[str, Any] | None, str | None]:
                 break
 
     if end == -1:
-        return None, "Gemini response contained incomplete JSON."
+        return None, "La respuesta Gemini contenía JSON incompleto."
 
     try:
         parsed = json.loads(cleaned[start:end])
     except json.JSONDecodeError as exc:
-        return None, f"Gemini JSON could not be parsed: {exc.msg}."
+        return None, f"No se pudo parsear el JSON de Gemini: {exc.msg}."
     if not isinstance(parsed, dict):
-        return None, "Gemini JSON must be an object."
+        return None, "Gemini JSON debe ser un objeto."
     return parsed, None
 
 
@@ -1775,31 +1775,31 @@ def validate_sql(sql: str, project_id: str, dataset_id: str, chart_type: str | N
     normalized_sql = (sql or "").strip()
 
     if not normalized_sql:
-        return {"is_valid": False, "errors": ["SQL is empty."], "warnings": warnings, "normalized_sql": ""}
+        return {"is_valid": False, "errors": ["SQL está vacío."], "warnings": warnings, "normalized_sql": ""}
 
     if re.search(r"(--|/\*|\*/)", normalized_sql):
-        errors.append("Comments are not allowed in generated SQL.")
+        errors.append("No se permiten comentarios en el SQL generado.")
 
     if normalized_sql.count(";") > 1 or ";" in normalized_sql.rstrip(";"):
-        errors.append("Multiple SQL statements or semicolon followed by more text are not allowed.")
+        errors.append("No se permiten varias declaraciones SQL o punto y coma seguidas de más texto.")
     normalized_sql = normalized_sql.rstrip().rstrip(";").strip()
 
     if not re.match(r"(?is)^\s*(SELECT|WITH)\b", normalized_sql):
-        errors.append("Only SELECT or WITH queries are allowed.")
+        errors.append("Sólo se permiten consultas SELECT o CON.")
 
     forbidden = r"\b(INSERT|UPDATE|DELETE|MERGE|CREATE|DROP|ALTER|TRUNCATE|GRANT|REVOKE|CALL|EXECUTE)\b"
     if re.search(forbidden, normalized_sql, flags=re.IGNORECASE):
-        errors.append("SQL contains a forbidden write, DDL, permission, or execution keyword.")
+        errors.append("SQL contiene una palabra clave de escritura, DDL, permiso o ejecución prohibida.")
 
     if re.search(r"\bINFORMATION_SCHEMA\b", normalized_sql, flags=re.IGNORECASE):
-        errors.append("INFORMATION_SCHEMA queries are not allowed.")
+        errors.append("Las consultas INFORMACIÓN_SCHEMA no están permitidas.")
 
     select_star_pattern = (
         r"(?is)(\bSELECT\s+(?:`?[A-Za-z_][A-Za-z0-9_]*`?\.)?\*"
         r"|,\s*(?:`?[A-Za-z_][A-Za-z0-9_]*`?\.)?\*)"
     )
     if re.search(select_star_pattern, normalized_sql):
-        errors.append("SELECT * is not allowed. Select explicit BI fields.")
+        errors.append("SELECCIONAR * no está permitido. Seleccione campos BI explícitos.")
 
     allowed_ref = f"{project_id}.{dataset_id}.vw_bi_dashboard"
     allowed_quoted = allowed_bi_view(project_id, dataset_id)
@@ -1807,7 +1807,7 @@ def validate_sql(sql: str, project_id: str, dataset_id: str, chart_type: str | N
     backtick_refs = re.findall(r"`([^`]+)`", normalized_sql)
     for ref in backtick_refs:
         if "." in ref and ref != allowed_ref:
-            errors.append(f"External table reference is not allowed: `{ref}`.")
+            errors.append(f"No se permite una referencia de tabla externa: `{ref}`.")
 
     cte_names = {
         match.lower()
@@ -1825,38 +1825,38 @@ def validate_sql(sql: str, project_id: str, dataset_id: str, chart_type: str | N
             continue
         if clean_ref.lower() in cte_names:
             continue
-        errors.append(f"Only the governed BI view can be queried. Unexpected table reference: {clean_ref}.")
+        errors.append(f"Sílo se puede consultar la vista BI gobernada. Referencia de tabla inesperada: {clean_ref}.")
 
     if not found_allowed_view:
-        errors.append("Query must read from the governed BI dashboard view.")
+        errors.append("La consulta debe leerse desde la vista del panel gobernado BI.")
 
     has_group_by = bool(re.search(r"(?is)\bGROUP\s+BY\b", normalized_sql))
     has_limit = bool(re.search(r"(?is)\bLIMIT\s+\d+\b", normalized_sql))
     if not has_limit and not has_group_by:
-        warnings.append("Listing-level query had no LIMIT. LIMIT 100 was appended.")
+        warnings.append("La consulta a nivel de listado no tenía LÍMITE. Se añadió LÍMITE 100.")
         normalized_sql = f"{normalized_sql}\nLIMIT 100"
     elif has_limit:
         limits = [int(value) for value in re.findall(r"(?is)\bLIMIT\s+(\d+)\b", normalized_sql)]
         if limits and max(limits) > 100 and not has_group_by:
-            errors.append("Listing-level queries must use LIMIT 100 or less.")
+            errors.append("Las consultas a nivel de listado deben usar LIMIT 100 o menos.")
 
     if chart_type == "scatter":
-        warnings.append("Scatter charts require at least two numeric result columns.")
+        warnings.append("Los gráficos de dispersión requieren al menos dos columnas de resultados numéricos.")
     elif chart_type in {"bar", "line"}:
-        warnings.append(f"{chart_type.title()} charts require a compatible category/date column and numeric value.")
+        warnings.append(f"Los gráficos de tipo {chart_type} requieren una columna compatible de categoría/fecha y un valor numérico.")
 
     return {"is_valid": not errors, "errors": errors, "warnings": warnings, "normalized_sql": normalized_sql}
 
 
 def bigquery_query_error_message(exc: Exception, stage: str) -> str:
     detail = getattr(exc, "message", "") or str(exc)
-    if "bytesBilledLimitExceeded" in detail or "bytes billed" in detail.lower():
+    if "bytesBilledLimitExceeded" in detail or "bytes facturados" in detail.lower():
         return (
-            f"{stage} was blocked by the BigQuery bytes-billed cap. "
-            f"The current cap is {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB. "
-            "Set `BQ_MAX_BYTES_BILLED_MB=100` before launching Streamlit if you want to allow this classroom query."
+            f"{stage} fue bloqueado por el límite de bytes facturados de BigQuery. "
+            f"El límite actual es {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB. "
+            "Configura `BQ_MAX_BYTES_BILLED_MB=100` antes de iniciar Streamlit si quieres permitir esta consulta en el aula."
         )
-    return f"{stage} failed because BigQuery rejected the SQL: {detail}"
+    return f"{stage} falló porque BigQuery rechazó el SQL: {detail}"
 
 
 def run_validated_query(sql: str, project_id: str) -> tuple[pd.DataFrame | None, dict[str, Any]]:
@@ -1871,11 +1871,11 @@ def run_validated_query(sql: str, project_id: str) -> tuple[pd.DataFrame | None,
         client = bigquery.Client(project=project_id)
     except DefaultCredentialsError:
         metadata["errors"].append(
-            "BigQuery credentials are not configured. Run `gcloud auth application-default login` or configure service account credentials."
+            "Las credenciales de BigQuery no están configuradas. Ejecuta `gcloud auth application-default login` o configura credenciales de service account."
         )
         return None, metadata
     except Exception:
-        metadata["errors"].append("BigQuery client could not be created. Check Google Cloud credentials and project access.")
+        metadata["errors"].append("No se pudo crear el cliente de BigQuery. Verifica las credenciales de Google Cloud y el acceso al proyecto.")
         return None, metadata
 
     dry_run_config = bigquery.QueryJobConfig(
@@ -1892,18 +1892,18 @@ def run_validated_query(sql: str, project_id: str) -> tuple[pd.DataFrame | None,
         metadata["errors"].append(bigquery_query_error_message(exc, "Dry-run"))
         return None, metadata
     except Forbidden:
-        metadata["errors"].append("Dry-run failed because the current credentials do not have BigQuery permission.")
+        metadata["errors"].append("Error en el ensayo porque las credenciales actuales no tienen el permiso BigQuery.")
         return None, metadata
     except GoogleAPIError as exc:
         metadata["errors"].append(bigquery_query_error_message(exc, "Dry-run"))
         return None, metadata
     except Exception:
-        metadata["errors"].append("Dry-run failed. Check the generated SQL and BigQuery configuration.")
+        metadata["errors"].append("Falló el ensayo. Verifique la configuración SQL y BigQuery generada.")
         return None, metadata
 
     if metadata["estimated_bytes"] is not None and metadata["estimated_bytes"] > MAX_BYTES_BILLED:
         metadata["errors"].append(
-            f"Query estimate is {metadata['estimated_mb']:.2f} MB, above the classroom limit of "
+            f"La estimación de la consulta es {metadata['estimated_mb']:.2f} MB, por encima del límite de aula de "
             f"{MAX_BYTES_BILLED / (1024 * 1024):.0f} MB."
         )
         return None, metadata
@@ -1913,16 +1913,16 @@ def run_validated_query(sql: str, project_id: str) -> tuple[pd.DataFrame | None,
         df = client.query(sql, job_config=execution_config).to_dataframe()
         metadata["executed"] = True
         if df.empty:
-            metadata["warnings"].append("Query ran successfully but returned no rows.")
+            metadata["warnings"].append("La consulta se ejecutó correctamente pero no devolvió filas.")
         return df, metadata
     except BadRequest as exc:
-        metadata["errors"].append(bigquery_query_error_message(exc, "Execution"))
+        metadata["errors"].append(bigquery_query_error_message(exc, "Ejecución"))
     except Forbidden:
-        metadata["errors"].append("Execution failed because the current credentials do not have BigQuery permission.")
+        metadata["errors"].append("La ejecución falló porque las credenciales actuales no tienen el permiso BigQuery.")
     except GoogleAPIError as exc:
-        metadata["errors"].append(bigquery_query_error_message(exc, "Execution"))
+        metadata["errors"].append(bigquery_query_error_message(exc, "Ejecución"))
     except Exception:
-        metadata["errors"].append("Execution failed. Check credentials, query permissions, and network access.")
+        metadata["errors"].append("La ejecución falló. Verifique las credenciales, consulte permisos y acceso a la red.")
     return None, metadata
 
 
@@ -1947,36 +1947,36 @@ def render_ai_chart(df: pd.DataFrame, chart_type: str) -> None:
                 if "date" in column.lower() or "year" in column.lower() or pd.api.types.is_datetime64_any_dtype(df[column])
             ]
             if not x_candidates:
-                st.info("No date or year-like column was available for the suggested line chart.")
+                st.info("No había ninguna columna de fecha o año disponible para el gráfico de líneas sugerido.")
                 return
             fig = px.line(df.sort_values(x_candidates[0]), x=x_candidates[0], y=numeric_columns[0])
         else:
-            st.info("The suggested chart type is not compatible with the returned columns.")
+            st.info("El tipo de gráfico sugerido no es compatible con las columnas devueltas.")
             return
         st.plotly_chart(fig, use_container_width=True)
     except Exception:
-        st.warning("The result table loaded, but chart rendering failed for these columns.")
+        st.warning("La tabla de resultados se cargó, pero la representación del gráfico falló para estas columnas.")
 
 
 def deterministic_ai_summary(df: pd.DataFrame, metadata: dict[str, Any]) -> str:
     if df is None or df.empty:
-        return "No rows were returned, so there is no business pattern to summarize from this query."
+        return "No se devolvió ninguna fila, por lo que no hay ningún patrón empresarial que resumir a partir de esta consulta."
 
-    summary = [f"- Query returned {len(df):,} rows and {len(df.columns):,} columns."]
+    summary = [f"- La consulta devolvió {len(df):,} filas y {len(df.columns):,} columnas."]
     numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
     if numeric_columns:
         first_numeric = numeric_columns[0]
         top = df.sort_values(first_numeric, ascending=False).head(3)
         values = ", ".join(str(value) for value in top[first_numeric].tolist())
-        summary.append(f"- Top observed values for `{first_numeric}` include: {values}.")
+        summary.append(f"- Los principales valores observados de `{first_numeric}` incluyen: {values}.")
     else:
         first_column = df.columns[0]
         values = ", ".join(str(value) for value in df[first_column].head(3).tolist())
-        summary.append(f"- First returned `{first_column}` values: {values}.")
+        summary.append(f"- Primeros valores devueltos de `{first_column}`: {values}.")
     if metadata.get("warnings"):
-        summary.append(f"- Caveat: {metadata['warnings'][0]}")
+        summary.append(f"- Advertencia: {metadata['warnings'][0]}")
     else:
-        summary.append("- Caveat: deterministic fallback summary; no AI interpretation was used.")
+        summary.append("- Advertencia: resumen determinista de reserva; no se utilizó ninguna interpretación de IA.")
     return "\n".join(summary)
 
 
@@ -1992,21 +1992,21 @@ def executive_summary(
 
     records = df.head(20).to_dict(orient="records") if df is not None else []
     prompt = f"""
-Write an investment committee interpretation of a governed BI query result.
+Escribe una interpretación para comité de inversión de un resultado de consulta BI gobernada.
 
-Rules:
-- Maximum 3 bullets.
-- Separate facts from interpretation.
-- Do not invent numbers.
-- Mention limitations.
-- Use investment committee language.
+Reglas:
+- Máximo 3 bullets.
+- Separa hechos de interpretación.
+- No inventes números.
+- Menciona limitaciones.
+- Usa lenguaje de comité de inversión.
 
-Original question: {question}
-Business intent: {ai_payload.get("business_intent")}
-Generated SQL: {sql}
-Dataframe shape: {df.shape if df is not None else None}
-First rows as records: {records}
-Limitations: {ai_payload.get("limitations", [])}
+Pregunta original: {question}
+Intención de negocio: {ai_payload.get("business_intent")}
+SQL generado: {sql}
+Forma del DataFrame: {df.shape if df is not None else None}
+Primeras filas como registros: {records}
+Limitaciones: {ai_payload.get("limitations", [])}
 """
     result, error = generate_gemini_content(prompt)
     if error:
@@ -2015,19 +2015,19 @@ Limitations: {ai_payload.get("limitations", [])}
 
 
 def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
-    st.title("Ask the Data — GenAI SQL Assistant")
-    st.caption("Natural-language questions translated into validated BigQuery SQL over the BI decision-support view.")
+    st.title("Pregunta A Los Datos - Asistente GenAI SQL")
+    st.caption("Preguntas en lenguaje natural traducidas a BigQuery SQL validado en la vista de soporte de decisiones BI.")
     st.info(
-        "This assistant uses Gemini to generate SQL, but BigQuery remains the source of truth. "
-        "Every AI-generated query is validated and dry-run checked before execution."
+        "Este asistente usa Gemini para generar SQL, pero BigQuery sigue siendo la fuente de la verdad. "
+        "Cada consulta generada por IA se valida y se verifica en seco antes de su ejecución."
     )
-    st.caption("The LLM writes candidate SQL. The application owns validation. BigQuery owns the data. The user owns the decision.")
+    st.caption("El LLM escribe el SQL candidato. La aplicación controla la validación. BigQuery controla los datos. El usuario toma la decisión.")
 
     demo_mode = not gemini_available()
     demo_queries = build_demo_queries(project_id, dataset_id)
     if demo_mode:
-        reason = gemini_unavailable_message() or "Gemini is unavailable."
-        st.warning(f"Demo Mode: using predefined SQL. {reason}")
+        reason = gemini_unavailable_message() or "Gemini no está disponible."
+        st.warning(f"Modo demo: usando SQL predefinido. {reason}")
         button_prompts = DEMO_QUESTIONS
     else:
         button_prompts = AI_EXAMPLE_PROMPTS
@@ -2035,7 +2035,7 @@ def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
     st.session_state.setdefault("ai_sql_history", [])
     st.session_state.setdefault("ai_sql_question", "")
 
-    st.write("Example questions")
+    st.write("Preguntas de ejemplo")
     button_columns = st.columns(2)
     for index, prompt in enumerate(button_prompts):
         if button_columns[index % 2].button(prompt, key=f"ai_prompt_{index}"):
@@ -2043,8 +2043,8 @@ def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
             st.session_state["ai_sql_pending_question"] = prompt
 
     with st.form("ai_sql_question_form"):
-        question = st.text_input("Ask a business question", value=st.session_state.get("ai_sql_question", ""))
-        submitted = st.form_submit_button("Ask the data")
+        question = st.text_input("Haga una pregunta de negocios", value=st.session_state.get("ai_sql_question", ""))
+        submitted = st.form_submit_button("Preguntar a los datos")
 
     if submitted:
         st.session_state["ai_sql_question"] = question
@@ -2053,23 +2053,23 @@ def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
     question = str(st.session_state.pop("ai_sql_pending_question", "")).strip()
     if not question:
         if submitted:
-            st.warning("Enter a question or select an example.")
+            st.warning("Ingrese una pregunta o seleccione un ejemplo.")
         return
 
     if demo_mode:
         ai_payload = demo_queries.get(question)
         if ai_payload is None:
-            st.error("Demo Mode can only run the predefined question buttons. Configure Gemini to ask custom questions.")
+            st.error("El modo de demostración solo puede ejecutar los botones de preguntas predefinidos. Configura Gemini para hacer preguntas personalizadas.")
             return
     else:
-        with st.spinner("Asking Gemini to generate governed SQL..."):
+        with st.spinner("Solicitando a Gemini que genere SQL gobernado..."):
             ai_payload, generation_error = generate_sql_with_gemini(question, project_id, dataset_id)
         if generation_error:
             st.error(generation_error)
-            st.info("Try one of the example prompts or simplify the question.")
+            st.info("Pruebe uno de los ejemplos o simplifique la pregunta.")
             return
         if ai_payload is None:
-            st.error("Gemini did not return a usable SQL payload.")
+            st.error("Gemini no devolvió una carga útil SQL utilizable.")
             return
 
     sql = str(ai_payload.get("sql", "")).strip()
@@ -2080,62 +2080,62 @@ def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
         chart_type = "table"
     validation = validate_sql(sql, project_id, dataset_id, chart_type)
     if comments_removed:
-        validation["warnings"].append("Gemini included SQL comments; they were removed before validation.")
+        validation["warnings"].append("Gemini incluyó comentarios SQL; fueron eliminados antes de la validación.")
     if aliases_sanitized:
-        validation["warnings"].append("Gemini included display-style aliases; they were converted to BigQuery-safe snake_case aliases.")
+        validation["warnings"].append("Gemini incluyó alias de estilo de visualización; se convirtieron en alias de casos de serpiente BigQuery seguros.")
 
-    st.subheader("Business intent")
-    st.write(ai_payload.get("business_intent", "No business intent was provided."))
-    st.caption(ai_payload.get("expected_output", "No expected output was provided."))
+    st.subheader("Intención comercial")
+    st.write(ai_payload.get("business_intent", "No se proporcionó ninguna intención comercial."))
+    st.caption(ai_payload.get("expected_output", "No se proporcionó ningún resultado esperado."))
 
     status_col, scan_col = st.columns(2)
     with status_col:
         if validation["is_valid"]:
-            st.success("Validation passed.")
+            st.success("Validación aprobada.")
         else:
-            st.error("Validation blocked this SQL.")
+            st.error("La validación bloqueó este SQL.")
         for error in validation["errors"]:
             st.error(error)
         for warning in validation["warnings"]:
             st.warning(warning)
 
-    with st.expander("Generated SQL", expanded=True):
+    with st.expander("SQL generado", expanded=True):
         st.code(validation["normalized_sql"] or sql, language="sql")
 
     if not validation["is_valid"]:
-        st.info("No BigQuery dry-run or execution was attempted because validation failed.")
+        st.info("No se intentó realizar ningún ensayo o ejecución BigQuery porque falló la validación.")
         return
 
-    with st.spinner("Running BigQuery dry-run and executing within the classroom scan limit..."):
+    with st.spinner("Ejecutando el ensayo BigQuery y ejecutándolo dentro del límite de escaneo del aula..."):
         result_df, metadata = run_validated_query(validation["normalized_sql"], project_id)
 
     with scan_col:
         if metadata.get("estimated_mb") is None:
-            st.metric("Estimated BigQuery scan", "Unavailable")
+            st.metric("Escaneo estimado BigQuery", "No disponible")
         else:
-            st.metric("Estimated BigQuery scan", f"{metadata['estimated_mb']:.2f} MB")
-        st.caption(f"Classroom maximum bytes billed: {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB")
+            st.metric("Escaneo estimado BigQuery", f"{metadata['estimated_mb']:.2f} MB")
+        st.caption(f"Máximo de bytes facturados en aula: {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB")
 
     for error in metadata["errors"]:
         st.error(error)
     for warning in metadata["warnings"]:
         st.warning(warning)
     if metadata["errors"] or result_df is None:
-        st.info("Adjust the question or credentials, then run the assistant again.")
+        st.info("Ajuste la pregunta o las credenciales y luego ejecute el asistente nuevamente.")
         return
 
-    st.subheader("Result table")
+    st.subheader("Tabla de resultados")
     st.dataframe(result_df, use_container_width=True, hide_index=True)
 
-    st.subheader("Suggested chart")
+    st.subheader("Gráfico sugerido")
     render_ai_chart(result_df, chart_type)
 
-    st.subheader("Executive interpretation")
+    st.subheader("Interpretación ejecutiva")
     st.markdown(executive_summary(question, ai_payload, validation["normalized_sql"], result_df, metadata))
 
     limitations = ai_payload.get("limitations", [])
     if limitations:
-        with st.expander("Caveats and limitations", expanded=False):
+        with st.expander("Advertencias y limitaciones", expanded=False):
             for limitation in limitations:
                 st.write(f"- {limitation}")
 
@@ -2148,7 +2148,7 @@ def render_ai_sql_assistant_tab(project_id: str, dataset_id: str) -> None:
         }
     )
     if st.session_state["ai_sql_history"]:
-        with st.expander("Session history", expanded=False):
+        with st.expander("Historial de sesiones", expanded=False):
             st.dataframe(pd.DataFrame(st.session_state["ai_sql_history"]).tail(10), use_container_width=True, hide_index=True)
 
 
@@ -2157,7 +2157,7 @@ def main() -> None:
     project_id = config.get("gcp_project_id")
     dataset_id = config.get("bq_dataset")
     if not project_id or not dataset_id:
-        st.error("Project configuration is missing `gcp_project_id` or `bq_dataset` in config/project_config.yaml.")
+        st.error("Falta la configuración del proyecto `gcp_project_id` o `bq_dataset` en config/project_config.yaml.")
         st.stop()
 
     df_raw, load_error = load_dashboard_data(project_id, dataset_id)
@@ -2165,12 +2165,12 @@ def main() -> None:
         st.error(load_error)
         st.stop()
     if df_raw is None or df_raw.empty:
-        st.error("The BI dashboard view returned no rows. Run the upstream pipeline before opening the dashboard.")
+        st.error("La vista del panel BI no devolvió filas. Ejecute la canalización ascendente antes de abrir el panel.")
         st.stop()
 
     missing_columns = validate_columns(df_raw)
     if missing_columns:
-        st.error("The BI view is missing required columns: " + ", ".join(missing_columns))
+        st.error("A la vista BI le faltan las columnas obligatorias: " + ", ".join(missing_columns))
         st.stop()
 
     df = clean_dashboard_data(df_raw)
@@ -2196,55 +2196,51 @@ def main() -> None:
 
     tab_committee, tab_builder, tab_ai = st.tabs(
         [
-            "Committee Dashboard",
-            "Strategy & Portfolio Builder",
-            "Ask the Data — GenAI SQL Assistant",
+            "Dashboard Del Comité",
+            "Estrategia Y Constructor De Portfolio",
+            "Pregunta A Los Datos - Asistente GenAI SQL",
         ]
     )
 
     with tab_committee:
-        st.title("Vehicle Portfolio Investment Simulator")
+        st.title("Simulador De Inversión En Portfolio De Vehículos")
         st.caption(
-            "Investment strategy, portfolio selection, financing economics and cross-sell value for a consumer finance business."
+            "Estrategia de inversión, selección de cartera, economía financiera y valor de venta cruzada para un negocio de financiación al consumo."
         )
         st.markdown(
-            "**Core business question:** With a fixed investment budget, which vehicle portfolio maximizes expected "
-            "business value through resale margin, financing margin and customer relationship value?"
+            "**Pregunta central de negocio:** con un presupuesto de inversión fijo, ¿qué portfolio de vehículos maximiza el valor esperado de negocio mediante margen de reventa, margen de financiación y valor de relación con el cliente?"
         )
         st.info(
-            "Regression predicts expected market price. Classification predicts commercial attractiveness. "
-            "Streamlit combines model outputs with business assumptions. This is decision support, not an automatic "
-            "acquisition, credit, compliance, or risk approval."
+            "La regresión predice el precio de mercado esperado. La clasificación predice el atractivo comercial. Streamlit combina las salidas del modelo con supuestos de negocio. Esto es soporte a la decisión, no aprobación automática de adquisición, crédito, compliance o riesgo."
         )
 
-        st.subheader("Selected Strategy Overview")
+        st.subheader("Descripción general de la estrategia seleccionada")
         st.markdown(overview)
         if metadata["apr_floor_applied"]:
-            st.warning("APR floor protection is active because discounts would otherwise reduce APR below the required margin.")
+            st.warning("APR la protección del piso está activa porque, de lo contrario, los descuentos reducirían APR por debajo del margen requerido.")
 
-        st.subheader("Executive KPIs")
+        st.subheader("KPI ejecutivos")
         render_kpis(summary, budget_params)
 
-        st.subheader("Committee Decision")
+        st.subheader("Decisión del Comité")
         render_committee_decision(summary, risk_warnings)
 
-        st.subheader("Profit Component Chart")
+        st.subheader("Gráfico de componentes de ganancias")
         component_chart(summary)
         st.caption(
-            "Profit components reconcile to expected total profit. Resale spread and income components are shown "
-            "as positive values; costs are shown as negative values."
+            "Los componentes de beneficio concilian con el beneficio total esperado. El diferencial de reventa y los ingresos se muestran como valores positivos; los costes se muestran como valores negativos."
         )
 
-        st.subheader("Risk & Confidence")
+        st.subheader("Riesgo y confianza")
         render_risk_confidence(risk_metrics, risk_warnings)
 
-        st.subheader("Current Recommendation")
+        st.subheader("Recomendación actual")
         st.markdown(deterministic_recommendation(summary, warnings))
         for warning in [item for item in warnings if item not in risk_warnings]:
             st.warning(warning)
 
-        st.subheader("Gemini Committee Memo")
-        if st.button("Generate committee memo"):
+        st.subheader("Gemini Memorándum del Comité")
+        if st.button("Generar memorando del comité"):
             prompt = build_memo_prompt(
                 vehicle_preset,
                 pricing_preset,
@@ -2257,63 +2253,58 @@ def main() -> None:
             st.markdown(call_gemini(prompt))
 
     with tab_builder:
-        st.subheader("Strategy Controls Summary")
+        st.subheader("Resumen de controles estratégicos")
         st.write(
             {
-                "Vehicle strategy": vehicle_preset,
-                "Pricing and cross-sell strategy": pricing_preset,
-                "Manual overrides active": customized,
+                "Estrategia del vehículo": vehicle_preset,
+                "Estrategia de precios y venta cruzada": pricing_preset,
+                "Anulaciones manuales activas": customized,
             }
         )
 
-        st.subheader("Before and After Filtering Counts")
+        st.subheader("Recuentos de filtrado antes y después")
         count_cols = st.columns(5)
-        count_cols[0].metric("Total vehicle universe", f"{counts['total_universe']:,}")
-        count_cols[1].metric("Eligible after filters", f"{counts['eligible_after_filters']:,}")
-        count_cols[2].metric("Selected vehicles", f"{summary['selected_count']:,}")
-        count_cols[3].metric("Excluded by filters", f"{counts['excluded_by_filters']:,}")
-        count_cols[4].metric("Missing model outputs excluded", f"{counts['excluded_by_missing_model_outputs']:,}")
-        st.caption(f"Excluded by quality flags: {counts['excluded_by_quality_flags']:,}")
+        count_cols[0].metric("Universo total de vehículos", f"{counts['total_universe']:,}")
+        count_cols[1].metric("Elegible después de los filtros", f"{counts['eligible_after_filters']:,}")
+        count_cols[2].metric("Vehículos seleccionados", f"{summary['selected_count']:,}")
+        count_cols[3].metric("Excluido por filtros", f"{counts['excluded_by_filters']:,}")
+        count_cols[4].metric("Se excluyen los resultados del modelo que faltan", f"{counts['excluded_by_missing_model_outputs']:,}")
+        st.caption(f"Excluidos por flags de calidad: {counts['excluded_by_quality_flags']:,}")
 
-        st.subheader("Portfolio Economics Summary")
+        st.subheader("Resumen de economía de cartera")
         econ_cols = st.columns(4)
-        econ_cols[0].metric("Capital deployed", fmt_eur(summary["capital_deployed"]))
-        econ_cols[1].metric("Remaining budget", fmt_eur(summary["remaining_budget"]))
-        econ_cols[2].metric("Expected total profit", fmt_eur(summary["expected_total_profit"]))
-        econ_cols[3].metric("Expected ROI", fmt_pct(summary["expected_roi"]))
+        econ_cols[0].metric("Capital desplegado", fmt_eur(summary["capital_deployed"]))
+        econ_cols[1].metric("Presupuesto restante", fmt_eur(summary["remaining_budget"]))
+        econ_cols[2].metric("Beneficio total esperado", fmt_eur(summary["expected_total_profit"]))
+        econ_cols[3].metric("ROI esperado", fmt_pct(summary["expected_roi"]))
         econ_cols_2 = st.columns(3)
-        econ_cols_2[0].metric("Vehicle margin", fmt_eur(summary["vehicle_margin"]))
-        econ_cols_2[1].metric("Financing margin", fmt_eur(summary["finance_margin"]))
-        econ_cols_2[2].metric("Cross-sell income", fmt_eur(summary["cross_sell_income"]))
+        econ_cols_2[0].metric("Margen del vehículo", fmt_eur(summary["vehicle_margin"]))
+        econ_cols_2[1].metric("Margen de financiación", fmt_eur(summary["finance_margin"]))
+        econ_cols_2[2].metric("Ingresos por venta cruzada", fmt_eur(summary["cross_sell_income"]))
 
-        st.subheader("Portfolio Opportunity Map")
+        st.subheader("Mapa de oportunidades de cartera")
         scatter_chart(eligible_with_actions)
 
-        st.subheader("Selected Portfolio")
-        table = selected_table(selected_with_actions).sort_values("Investment score", ascending=False)
+        st.subheader("Portafolio Seleccionado")
+        table = selected_table(selected_with_actions).sort_values("Puntuación de inversión", ascending=False)
         st.dataframe(table, use_container_width=True, hide_index=True)
         st.download_button(
-            "Download selected portfolio CSV",
+            "Descargar portafolio seleccionado CSV",
             table.to_csv(index=False),
             file_name="selected_vehicle_portfolio.csv",
             mime="text/csv",
         )
-        with st.expander("Download full eligible universe"):
+        with st.expander("Descargar universo elegible completo"):
             st.download_button(
-                "Download eligible universe CSV",
+                "Descargar universo elegible CSV",
                 eligible_with_actions.to_csv(index=False),
                 file_name="eligible_vehicle_universe.csv",
                 mime="text/csv",
             )
 
-        st.subheader("Business Notes")
+        st.subheader("Notas comerciales")
         st.markdown(
-            """
-- The selected portfolio under the current mandate is the result of the current strategy and assumptions.
-- Changing filters changes the investment mandate.
-- Changing pricing and cross-sell assumptions changes the monetization strategy.
-- The model provides decision signals; the business strategy defines the portfolio.
-"""
+            "\n- La cartera seleccionada bajo el mandato actual es el resultado de la estrategia y los supuestos actuales.\n- Cambiar filtros cambia el mandato de inversión.\n- Cambiar los supuestos de precios y ventas cruzadas cambia la estrategia de monetización.\n- El modelo proporciona señales de decisión; la estrategia de negocio define la cartera.\n"
         )
 
     with tab_ai:

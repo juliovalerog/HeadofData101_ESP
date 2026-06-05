@@ -1,5 +1,5 @@
--- Staging contract for the processed CSV produced by Notebook 02.
--- Run this before loading the processed CSV, then load data before dimension/fact builds.
+-- Contrato de preparación para el CSV procesado producido por Notebook 02.
+-- Ejecute esto antes de cargar el CSV procesado, luego cargue los datos antes de que se generen dimensiones/hechos.
 CREATE OR REPLACE TABLE `albertheadofdata101.autoscout_audi_a3_germany.stg_listings_clean` (
   make STRING,
   model STRING,

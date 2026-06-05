@@ -1,183 +1,183 @@
-# Streamlit BI Dashboard
+# Dashboard BI En Streamlit
 
-## Purpose
+## Propósito
 
-This dashboard is the final business decision layer for the course. It turns upstream model outputs into an executive investment simulator for a consumer finance business evaluating used-vehicle acquisition opportunities.
+Este dashboard es la capa final de decisión de negocio del curso. Convierte las salidas de los modelos previos en un simulador ejecutivo de inversión para un negocio de consumer finance que evalúa oportunidades de adquisición de vehículos usados.
 
-The dashboard is optional for running the baseline, but recommended as the final decision-support demo after the warehouse and model output tables are populated.
+El dashboard es opcional para ejecutar el baseline, pero recomendado como demo final de soporte a la decisión cuando el warehouse y las tablas de salida de modelo ya están pobladas.
 
-The dashboard is designed for an investment committee, portfolio committee, or vehicle financing unit. It is not a technical notebook, not a production approval engine, and not an automatic acquisition decision tool.
+Está diseñado para un comité de inversión, comité de portfolio o unidad de financiación de vehículos. No es un notebook técnico, ni un motor de aprobación en producción, ni una herramienta automática de decisión de compra.
 
-## Business Question
+## Pregunta De Negocio
 
-With a fixed investment budget, which vehicle portfolio should the business acquire and resell through financed operations, considering resale margin, financing margin, cross-sell income, loyalty value, risk, and commercial campaign coherence?
+Con un presupuesto fijo de inversión, ¿qué portfolio de vehículos debería adquirir y revender el negocio mediante operaciones financiadas, considerando margen de reventa, margen financiero, ingresos de venta cruzada, valor de fidelización, riesgo y coherencia de campaña comercial?
 
-## Data Source
+## Fuente De Datos
 
-Primary source:
+Fuente principal:
 
-- BigQuery view: `vw_bi_dashboard`
+- vista BigQuery: `vw_bi_dashboard`
 
-The default app path requires BigQuery access. It does not use a bundled mock dataset.
+La ruta por defecto de la app requiere acceso a BigQuery. No usa un dataset mock empaquetado.
 
-The app reads `gcp_project_id` and `bq_dataset` from:
+La app lee `gcp_project_id` y `bq_dataset` desde:
 
 - `config/project_config.yaml`
 
-The upstream pipeline provides:
+El pipeline previo proporciona:
 
-- Regression output: `expected_price_eur`
-- Classification output: commercial attractiveness score from `top_price_probability`
-- BI view: listing profile, actual price, expected-price gap, commercial attractiveness signal, and decision flag
+- salida de regresión: `expected_price_eur`
+- salida de clasificación: score de atractivo comercial desde `top_price_probability`
+- vista BI: perfil del listing, precio real, brecha frente a `expected_price`, señal de atractivo comercial y flag de decisión
 
-Dashboard-specific investment, financing, cross-sell, risk, and portfolio-selection metrics are computed inside Streamlit.
+Las métricas específicas de inversión, financiación, venta cruzada, riesgo y selección de portfolio se calculan dentro de Streamlit.
 
-## How To Run
+## Cómo Ejecutarlo
 
-Install the minimal dependencies:
+Instala las dependencias mínimas:
 
 ```bash
 pip install -r requirements_min.in
 ```
 
-Run the dashboard:
+Ejecuta el dashboard:
 
 ```bash
 streamlit run bi/streamlit_app.py
 ```
 
-## BigQuery Authentication
+## Autenticación BigQuery
 
-The default path loads data from BigQuery. Authenticate before running the app:
+La ruta por defecto carga datos desde BigQuery. Autentícate antes de ejecutar la app:
 
 ```bash
 gcloud auth application-default login
 ```
 
-Alternatively, configure service account credentials in your execution environment using Google Cloud standard authentication variables.
+También puedes configurar credenciales de service account en el entorno de ejecución usando las variables estándar de autenticación de Google Cloud.
 
-If credentials are missing or invalid, the app shows a business-friendly error instead of a raw traceback.
+Si faltan credenciales o no son válidas, la app muestra un error legible de negocio en lugar de un traceback crudo.
 
-The GenAI SQL assistant dry-runs every query and applies a classroom bytes-billed cap. The default is 50 MB. If BigQuery reports that a governed-view query requires a higher minimum billed amount, launch Streamlit with a larger local cap:
+El asistente GenAI SQL hace dry-run de cada consulta y aplica un límite docente de bytes facturados. El valor por defecto es 50 MB. Si BigQuery informa de que una consulta sobre la vista gobernada requiere un mínimo mayor, lanza Streamlit con un límite local más alto:
 
 ```powershell
 $env:BQ_MAX_BYTES_BILLED_MB="100"
 streamlit run bi/streamlit_app.py
 ```
 
-## Gemini API Key
+## Clave API De Gemini
 
-Gemini is optional. The committee memo and GenAI SQL assistant use the `google-genai` package when it is installed and an API key is available.
+Gemini es opcional. El memo de comité y el asistente GenAI SQL usan el paquete `google-genai` cuando está instalado y hay una clave API disponible.
 
-This repo reads Gemini credentials from environment variables only. It does not read Gemini keys from `.streamlit/secrets.toml`, Streamlit Cloud secrets, `.env`, or any committed credential file.
+Este repo lee credenciales de Gemini sólo desde variables de entorno. No lee claves de Gemini desde `.streamlit/secrets.toml`, secretos de Streamlit Cloud, `.env` ni ningún archivo de credenciales versionado.
 
-In PowerShell, configure one of:
+En PowerShell, configura una de estas variables:
 
 ```powershell
 $env:GEMINI_API_KEY="your_api_key_here"
 ```
 
-or:
+o:
 
 ```powershell
 $env:GOOGLE_API_KEY="your_api_key_here"
 ```
 
-`GEMINI_API_KEY` takes priority over `GOOGLE_API_KEY`. If neither variable is set, the dashboard keeps working with deterministic/default behavior. The app does not create, print, log, hardcode, or commit API keys.
+`GEMINI_API_KEY` tiene prioridad sobre `GOOGLE_API_KEY`. Si no está definida ninguna variable, el dashboard sigue funcionando con comportamiento determinista/default. La app no crea, imprime, registra, hardcodea ni commitea claves API.
 
-## Dashboard Structure
+## Estructura Del Dashboard
 
-The app has three tabs:
+La app tiene tres pestañas:
 
-1. `Committee Dashboard`
-2. `Strategy & Portfolio Builder`
-3. `Ask the Data - GenAI SQL Assistant`
+1. `Dashboard Del Comité`
+2. `Estrategia Y Constructor De Portfolio`
+3. `Pregunta A Los Datos - Asistente GenAI SQL`
 
-The first tab is the executive decision screen. The second tab is the interactive working screen for strategy tuning and portfolio construction. The third tab is a governed text-to-SQL assistant over the BI dashboard view.
+La primera pestaña es la pantalla ejecutiva de decisión. La segunda es la pantalla interactiva para ajustar la estrategia y construir el portfolio. La tercera es un asistente text-to-SQL gobernado sobre la vista BI del dashboard.
 
-## Vehicle Strategy Presets
+## Presets De Estrategia De Vehículo
 
-Vehicle strategy presets define the investment mandate. They do not change model outputs.
+Los presets de estrategia de vehículo definen el mandato de inversión. No cambian las salidas de los modelos.
 
-- `Broad Market`: wide opportunity discovery with minimal filtering.
-- `Young Low-Mileage Core`: cleaner, easier-to-sell portfolio with stricter age and mileage filters.
-- `Mainstream Retail Campaign`: coherent campaign around mainstream, easy-to-explain vehicles.
-- `Higher-Ticket Margin`: higher unit profit with stronger capital concentration risk.
-- `Conservative Risk`: defensibility over volume, with stronger quality and model-signal thresholds.
+- `Mercado amplio`: descubrimiento amplio de oportunidades con filtrado mínimo.
+- `Núcleo joven con bajo kilometraje`: portfolio más limpio y fácil de vender con filtros más estrictos de edad y kilometraje.
+- `Campaña retail generalista`: campaña coherente alrededor de vehículos generalistas y fáciles de explicar.
+- `Margen en vehículos de mayor precio`: mayor beneficio unitario con más riesgo de concentración de capital.
+- `Riesgo conservador`: defensibilidad por encima del volumen, con umbrales más fuertes de calidad y señal de modelo.
 
-After a preset is selected, every assumption remains editable in the sidebar.
+Después de seleccionar un preset, todos los supuestos siguen siendo editables en la barra lateral.
 
-## Pricing And Cross-Sell Presets
+## Presets De Pricing Y Venta Cruzada
 
-Pricing and cross-sell presets define the monetization strategy.
+Los presets de pricing y venta cruzada definen la estrategia de monetización.
 
-- `Base Case`: balanced default assumptions.
-- `Aggressive Cross-Sell`: stronger bundle economics and higher attach rates.
-- `Finance Margin Focus`: higher direct financing margin with lower cross-sell emphasis.
-- `Customer Loyalty Focus`: stronger long-term relationship value and more generous APR discounts.
-- `Stress Case`: adverse resale, funding, risk, and commercial assumptions.
+- `Caso base`: supuestos equilibrados por defecto.
+- `Venta cruzada agresiva`: economía de bundle más fuerte y mayores tasas de contratación.
+- `Foco en margen financiero`: mayor margen directo de financiación con menor énfasis en venta cruzada.
+- `Foco en fidelización`: mayor valor de relación a largo plazo y descuentos APR más generosos.
+- `Escenario de estrés`: supuestos adversos de reventa, funding, riesgo y comerciales.
 
-Manual overrides are detected and shown in the sidebar and strategy overview.
+Los cambios manuales se detectan y se muestran en la barra lateral y en el resumen de estrategia.
 
-## Main Business Calculations
+## Cálculos Principales De Negocio
 
-For each eligible vehicle, the app estimates:
+Para cada vehículo elegible, la app estima:
 
-- expected discount versus model-predicted market price
-- conservative resale price
-- vehicle resale margin
-- capital deployed
-- finance margin after expected weighted APR discounts
-- insurance, fuel card, payroll transfer, and loyalty value
-- inventory funding cost
-- expected total profit
-- expected ROI
-- resale speed proxy
-- portfolio fit weight
-- investment score
+- descuento esperado frente al precio de mercado predicho por el modelo
+- precio de reventa conservador
+- margen de reventa del vehículo
+- capital desplegado
+- margen financiero tras descuentos APR ponderados
+- valor de seguro, tarjeta de combustible, nómina y fidelización
+- coste de funding de inventario
+- beneficio total esperado
+- ROI esperado
+- proxy de velocidad de reventa
+- peso de encaje en portfolio
+- score de inversión
 
-The recommended portfolio under the current strategy is selected by a transparent ranking rule. Vehicles are ranked by investment score and selected until the budget, cash buffer, or maximum vehicle count is reached. This is not a full mathematical optimization model.
+El portfolio recomendado bajo la estrategia actual se selecciona con una regla de ranking transparente. Los vehículos se ordenan por score de inversión y se seleccionan hasta alcanzar el presupuesto, el buffer de caja o el número máximo de vehículos. No es un modelo de optimización matemática completo.
 
-## Gemini Committee Memo
+## Memo De Comité Con Gemini
 
-The optional Gemini memo receives only aggregated strategy context, assumptions, warnings, and the top selected candidates. It does not send unnecessary raw data.
+El memo opcional de Gemini recibe sólo contexto agregado de estrategia, supuestos, avisos y los principales candidatos seleccionados. No envía datos raw innecesarios.
 
-The memo includes:
+El memo incluye:
 
-1. Selected Strategy and Investment Mandate
-2. Executive Recommendation
-3. Portfolio Rationale
-4. Key Assumptions
-5. Expected Financial Result
-6. Cross-Sell and Loyalty Logic
-7. Main Risks and Model Limitations
-8. Suggested Next Validation Steps
+1. estrategia seleccionada y mandato de inversión
+2. recomendación ejecutiva
+3. racional del portfolio
+4. supuestos clave
+5. resultado financiero esperado
+6. lógica de venta cruzada y fidelización
+7. principales riesgos y limitaciones de modelo
+8. siguientes pasos sugeridos de validación
 
-## Suggested 10-Minute Live Demo
+## Demo En Vivo De 10 Minutos
 
-1. Start with `Base Case` and `Broad Market`.
-2. Explain the committee decision box.
-3. Switch to `Aggressive Cross-Sell` and show how value drivers change.
-4. Switch to `Conservative Risk` and show how the eligible universe shrinks.
-5. Adjust investment budget and show selected portfolio changes.
-6. Modify age and mileage filters and explain the investment mandate.
-7. Generate the Gemini committee memo.
-8. Conclude: "The model does not decide the strategy; it allows the committee to compare strategies with data."
+1. Empieza con `Caso base` y `Mercado amplio`.
+2. Explica la caja de decisión del comité.
+3. Cambia a `Venta cruzada agresiva` y muestra cómo cambian los drivers de valor.
+4. Cambia a `Riesgo conservador` y muestra cómo se reduce el universo elegible.
+5. Ajusta el presupuesto de inversión y muestra cómo cambia el portfolio seleccionado.
+6. Modifica filtros de edad y kilometraje y explica el mandato de inversión.
+7. Genera el memo de comité con Gemini.
+8. Concluye: "El modelo no decide la estrategia; permite al comité comparar estrategias con datos."
 
-Do not explain every formula during the demo. Focus on how changing the business strategy changes the eligible universe, the selected portfolio, the value drivers, and the committee recommendation.
+No expliques cada fórmula durante la demo. Enfócate en cómo los cambios de estrategia de negocio cambian el universo elegible, el portfolio seleccionado, los drivers de valor y la recomendación del comité.
 
-## Teaching Message
+## Mensaje Docente
 
-- The dashboard is the final decision layer of the pipeline.
-- Regression creates expected market price.
-- Classification creates commercial attractiveness.
-- Business assumptions create the investment strategy.
-- BI converts all of this into a committee-ready decision product.
+- El dashboard es la capa final de decisión del pipeline.
+- La regresión crea el precio de mercado esperado.
+- La clasificación crea el atractivo comercial.
+- Los supuestos de negocio crean la estrategia de inversión.
+- BI convierte todo esto en un producto de decisión listo para comité.
 
-The model does not decide the strategy; it allows the committee to compare strategies with data.
+El modelo no decide la estrategia; permite al comité comparar estrategias con datos.
 
-## Decision-Support Disclaimer
+## Disclaimer De Soporte A La Decisión
 
-This is a simulated decision-support tool. It is not a final acquisition, credit, compliance, or risk approval.
+Esta herramienta simula soporte a la decisión. No es una aprobación final de adquisición, crédito, compliance o riesgo.
 
-Regression and classification outputs come from the upstream course pipeline. Streamlit combines those model signals with editable business assumptions so the committee can discuss strategy, economics, and portfolio coherence.
+Las salidas de regresión y clasificación vienen del pipeline previo del curso. Streamlit combina esas señales de modelo con supuestos editables de negocio para que el comité pueda discutir estrategia, economía y coherencia de portfolio.

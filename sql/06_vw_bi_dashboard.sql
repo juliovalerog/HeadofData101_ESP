@@ -1,5 +1,5 @@
--- BI-ready decision support view.
--- Combines actual price, expected-price predictions, and top-price probabilities.
+-- Vista de soporte de decisiones lista para BI.
+-- Combina el precio real, las predicciones expected-price y las probabilidades top-price.
 
 CREATE TABLE IF NOT EXISTS `albertheadofdata101.autoscout_audi_a3_germany.fact_expected_price_predictions` (
   listing_id INT64,
