@@ -92,7 +92,7 @@ def env_megabytes(name: str, default: int) -> int:
     return default
 
 
-MAX_BYTES_BILLED = env_megabytes("BQ_MAX_BYTES_BILLED_MB", 50) * 1024 * 1024
+MAX_BYTES_BILLED = env_megabytes("BQ_MAX_BYTES_BILLED_MB", 100) * 1024 * 1024
 ALLOWED_BI_VIEW_TEMPLATE = "`{project_id}.{dataset_id}.vw_bi_dashboard`"
 
 AI_EXAMPLE_PROMPTS = [
@@ -1854,7 +1854,7 @@ def bigquery_query_error_message(exc: Exception, stage: str) -> str:
         return (
             f"{stage} fue bloqueado por el límite de bytes facturados de BigQuery. "
             f"El límite actual es {MAX_BYTES_BILLED / (1024 * 1024):.0f} MB. "
-            "Configura `BQ_MAX_BYTES_BILLED_MB=100` antes de iniciar Streamlit si quieres permitir esta consulta en el aula."
+            "Configura `BQ_MAX_BYTES_BILLED_MB` con un valor mayor antes de iniciar Streamlit si quieres permitir esta consulta en el aula."
         )
     return f"{stage} falló porque BigQuery rechazó el SQL: {detail}"
 

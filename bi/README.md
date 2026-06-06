@@ -58,10 +58,10 @@ También puedes configurar credenciales de service account en el entorno de ejec
 
 Si faltan credenciales o no son válidas, la app muestra un error legible de negocio en lugar de un traceback crudo.
 
-El asistente GenAI SQL hace dry-run de cada consulta y aplica un límite docente de bytes facturados. El valor por defecto es 50 MB. Si BigQuery informa de que una consulta sobre la vista gobernada requiere un mínimo mayor, lanza Streamlit con un límite local más alto:
+El asistente GenAI SQL hace dry-run de cada consulta y aplica un límite docente de bytes facturados. El valor por defecto es 100 MB. Si BigQuery informa de que una consulta sobre la vista gobernada requiere un mínimo mayor, lanza Streamlit con un límite local más alto:
 
 ```powershell
-$env:BQ_MAX_BYTES_BILLED_MB="100"
+$env:BQ_MAX_BYTES_BILLED_MB="200"
 streamlit run bi/streamlit_app.py
 ```
 
